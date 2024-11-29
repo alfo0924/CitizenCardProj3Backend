@@ -70,10 +70,3 @@ src/main/resources/
 3. 商店管理
 4. 用戶管理
 
-
-
-Citations:
-[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/22552001/b82a87c6-dde5-4ac9-bda6-31b2323b4527/paste.txt
-[2] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/22552001/e230b992-023c-41c1-b4e1-c7d3b1c5e6c4/paste.txt
-[3] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/22552001/3e3c4e16-0692-4589-b7f4-df31634f2181/paste.txt
-[4] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/22552001/cf7ca5a1-de10-46e6-92de-a418df7815ea/paste.txt
