@@ -22,6 +22,7 @@ public class MovieResponse {
     private Boolean isShowing;
     private Integer price;
     private Double score;
+    private String description;
 
     // 用於場次信息
     private LocalDateTime showTime;

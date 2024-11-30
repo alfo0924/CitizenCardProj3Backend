@@ -30,6 +30,8 @@ public class MovieRequest {
 
     private String trailerUrl;
 
+    private String description;  // 添加描述欄位
+
     @NotNull(message = "上映日期不能為空")
     private LocalDateTime releaseDate;
 

@@ -1,6 +1,8 @@
 package org.example._citizencard3.repositroy;
 
 import org.example._citizencard3.model.Movie;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -42,4 +44,13 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     @Query("SELECT AVG(m.price) FROM Movie m WHERE m.isShowing = true")
     Double getAverageTicketPrice();
+    Page<Movie> findByTitleContaining(String title, Pageable pageable);
+
+    Page<Movie> findByGenre(String genre, Pageable pageable);
+
+    List<Movie> findByIsShowingTrueAndReleaseDateBeforeAndEndDateAfter(
+            LocalDateTime releaseDate,
+            LocalDateTime endDate
+    );
+
 }
