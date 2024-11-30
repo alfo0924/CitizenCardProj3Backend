@@ -1,4 +1,4 @@
-package org.example._citizencard3.repository;
+package org.example._citizencard3.repositroy;
 
 import org.example._citizencard3.model.User;
 import org.springframework.data.domain.Pageable;

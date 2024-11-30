@@ -1,4 +1,4 @@
-package org.example._citizencard3.repository;
+package org.example._citizencard3.repositroy;
 
 import org.example._citizencard3.model.Store;
 import org.springframework.data.domain.Page;
@@ -27,6 +27,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     Page<Store> findByCategoryAndActiveTrue(String category, Pageable pageable);
 
     List<Store> findByCategoryAndActiveTrue(String category);
+    List<Store> findByOrderByRatingCountDesc();
 
     // 自定義查詢
     @Query("SELECT DISTINCT s.category FROM Store s WHERE s.active = true")

@@ -5,7 +5,8 @@ import org.example._citizencard3.dto.request.StoreRequest;
 import org.example._citizencard3.dto.response.StoreResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.Store;
-import org.example._citizencard3.repository.StoreRepository;
+
+import org.example._citizencard3.repositroy.StoreRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -160,5 +161,16 @@ public class StoreService {
                 .rating(store.getRating())
                 .ratingCount(store.getRatingCount())
                 .build();
+    }
+    public List<StoreResponse> getPopularStores() {
+        // 根據評分數量降序排序，取前10個商店
+        List<Store> popularStores = storeRepository.findByOrderByRatingCountDesc()
+                .stream()
+                .limit(10)
+                .toList();
+
+        return popularStores.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 }
