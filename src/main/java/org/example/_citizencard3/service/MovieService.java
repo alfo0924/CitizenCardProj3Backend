@@ -5,7 +5,7 @@ import org.example._citizencard3.dto.request.MovieRequest;
 import org.example._citizencard3.dto.response.MovieResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.Movie;
-import org.example._citizencard3.repository.MovieRepository;
+import org.example._citizencard3.repositroy.MovieRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
