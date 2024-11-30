@@ -3,6 +3,7 @@ package org.example._citizencard3.controller;
 import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
 import org.example._citizencard3.dto.response.UserResponse;
+import org.example._citizencard3.dto.response.UserStatsResponse;
 import org.example._citizencard3.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
