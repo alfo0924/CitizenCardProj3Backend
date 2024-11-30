@@ -1,6 +1,7 @@
 package org.example._citizencard3.repositroy;
 
 import org.example._citizencard3.model.User;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    List<User> findByNameContainingOrEmailContaining(String name, String email);
+    List<User> findByNameContainingOrEmailContaining(String name, String email, PageRequest pageRequest);
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.active = true")
     long countByActiveTrue();

@@ -9,41 +9,37 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
+@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 @Table(name = "schedules")
-class Schedule {
-
+public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 
     @Column(nullable = false)
-    private LocalDateTime showTime;  // 放映時間
+    private LocalDateTime showTime;
 
     @Column(nullable = false)
-    private String hall;  // 影廳
+    private String hall;
 
     @Column(nullable = false)
-    private Integer totalSeats;  // 總座位數
+    private Integer availableSeats;
 
     @Column(nullable = false)
-    private Integer availableSeats;  // 可用座位數
+    private Boolean active = true;
 
     @Column(nullable = false)
-    private Boolean active = true;  // 是否啟用
+    private LocalDateTime createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;  // 創建時間
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;  // 更新時間
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
