@@ -1,10 +1,7 @@
 package org.example._citizencard3.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.example._citizencard3.model.enums.UserRole;
@@ -74,6 +71,12 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Wallet wallet;
 
+    // 添加 getter 和 setter
+    @Setter
+    @Getter
+    @Column(length = 10)
+    private String gender;
+
     // 業務方法
     public void updateLoginInfo(String ip) {
         this.lastLoginTime = LocalDateTime.now();
@@ -97,43 +100,3 @@ public class User {
     }
 }
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity
-@Table(name = "wallets")
-class Wallet {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @Column(nullable = false)
-    private Double balance = 0.0;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    // 業務方法
-    public void deposit(Double amount) {
-        this.balance += amount;
-    }
-
-    public boolean withdraw(Double amount) {
-        if (this.balance >= amount) {
-            this.balance -= amount;
-            return true;
-        }
-        return false;
-    }
-}

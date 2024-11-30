@@ -157,4 +157,47 @@ public class AuthService {
                 .role(user.getRole().name())
                 .build();
     }
+    /**
+     * 檢查郵箱是否可用
+     */
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
+    /**
+     * 發送密碼重置郵件
+     */
+    public void sendPasswordResetEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(
+                        "找不到使用者",
+                        HttpStatus.NOT_FOUND
+                ));
+
+        String resetToken = jwtTokenProvider.generatePasswordResetToken(email);
+        // TODO: 實現郵件發送邏輯
+        // emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+    }
+
+    /**
+     * 重置密碼
+     */
+    public void resetPassword(String token, String newPassword) {
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw new CustomException(
+                    "無效的重置令牌",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(
+                        "找不到使用者",
+                        HttpStatus.NOT_FOUND
+                ));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }

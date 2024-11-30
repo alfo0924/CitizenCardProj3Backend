@@ -120,4 +120,16 @@ public class JwtTokenProvider {
         // 在實際應用中，可以將令牌加入黑名單
         // 這裡僅作為示例
     }
+    public String generatePasswordResetToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 3600000); // 1小時有效期
+
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .claim("type", "password_reset")
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
 }
