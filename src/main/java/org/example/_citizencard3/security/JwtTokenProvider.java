@@ -17,12 +17,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class JwtTokenProvider {
 
     private final JwtConfig jwtConfig;
     private final UserDetailsServiceImpl userDetailsService;
-    private final Key key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
+    private final Key key;
+
+    // 建構函數
+    public JwtTokenProvider(JwtConfig jwtConfig, UserDetailsServiceImpl userDetailsService) {
+        this.jwtConfig = jwtConfig;
+        this.userDetailsService = userDetailsService;
+        this.key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
+    }
 
     // 生成訪問令牌
     public String generateToken(Authentication authentication) {
@@ -37,7 +43,8 @@ public class JwtTokenProvider {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", email);
-        claims.put("created", new Date());
+        claims.put("created", now);
+        claims.put("type", "access_token");
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -62,6 +69,21 @@ public class JwtTokenProvider {
                 .setSubject(email)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
+                .claim("type", "refresh_token")
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    // 生成密碼重置令牌
+    public String generatePasswordResetToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 3600000); // 1小時有效期
+
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .claim("type", "password_reset")
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -93,11 +115,13 @@ public class JwtTokenProvider {
     // 驗證刷新令牌
     public boolean validateRefreshToken(String token) {
         try {
-            Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(token);
-            return true;
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return "refresh_token".equals(claims.get("type"));
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
@@ -119,17 +143,5 @@ public class JwtTokenProvider {
     public void invalidateToken(String token) {
         // 在實際應用中，可以將令牌加入黑名單
         // 這裡僅作為示例
-    }
-    public String generatePasswordResetToken(String email) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + 3600000); // 1小時有效期
-
-        return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .claim("type", "password_reset")
-                .signWith(key, SignatureAlgorithm.HS512)
-                .compact();
     }
 }
