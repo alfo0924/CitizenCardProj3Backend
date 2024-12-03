@@ -6,7 +6,7 @@ import org.example._citizencard3.dto.response.StoreResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.Store;
 
-import org.example._citizencard3.repositroy.StoreRepository;
+import org.example._citizencard3.repository.StoreRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;

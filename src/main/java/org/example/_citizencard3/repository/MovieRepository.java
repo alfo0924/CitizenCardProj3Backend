@@ -1,4 +1,4 @@
-package org.example._citizencard3.repositroy;
+package org.example._citizencard3.repository;
 
 import org.example._citizencard3.model.Movie;
 import org.springframework.data.domain.Page;

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.User;
 
-import org.example._citizencard3.repositroy.UserRepository;
+import org.example._citizencard3.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

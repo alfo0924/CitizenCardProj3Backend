@@ -7,7 +7,7 @@ import org.example._citizencard3.dto.response.UserStatsResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.User;
 import org.example._citizencard3.model.enums.UserRole;
-import org.example._citizencard3.repositroy.UserRepository;
+import org.example._citizencard3.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
