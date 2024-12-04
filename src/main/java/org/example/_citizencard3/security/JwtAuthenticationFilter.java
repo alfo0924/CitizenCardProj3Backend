@@ -29,32 +29,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         try {
+            String jwt = getJwtFromRequest(request);
+
             // 檢查是否為公開路徑
             if (isPublicPath(request)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            String jwt = getJwtFromRequest(request);
+            // 處理需要認證的路徑
+            if (StringUtils.hasText(jwt)) {
+                if (jwtTokenProvider.validateToken(jwt)) {
+                    String email = jwtTokenProvider.getEmailFromToken(jwt);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-            // 如果有token且驗證通過，設置認證信息
-            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-                String email = jwtTokenProvider.getEmailFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
 
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } else {
+                // 非公開路徑且沒有token
+                if (!isPublicPath(request)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
             }
+
         } catch (Exception e) {
             log.error("JWT認證處理失敗: {}", e.getMessage());
             SecurityContextHolder.clearContext();
@@ -75,18 +84,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
 
-        // 檢查是否為公開路徑
-        boolean isPublic = requestURI.startsWith("/api/auth/") ||
+        // 基本公開路徑
+        if (requestURI.startsWith("/api/auth/") ||
                 requestURI.startsWith("/api/public/") ||
-                requestURI.equals("/error");
+                requestURI.equals("/error")) {
+            return true;
+        }
 
-        // 檢查GET請求的特殊路徑
+        // GET請求的特殊公開路徑
         if ("GET".equalsIgnoreCase(method)) {
-            isPublic = isPublic ||
-                    requestURI.startsWith("/api/movies") ||
+            return requestURI.startsWith("/api/movies") ||
                     requestURI.startsWith("/api/stores");
         }
 
-        return isPublic;
+        return false;
     }
 }
