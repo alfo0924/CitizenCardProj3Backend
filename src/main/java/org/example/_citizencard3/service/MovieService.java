@@ -61,6 +61,7 @@ public class MovieService {
     public Page<MovieResponse> getMovieSchedules(Long movieId, int page, int size, String sort) {
         Sort sorting = createSort(sort);
         Pageable pageable = PageRequest.of(page, size, sorting);
+        Movie movie = findMovieById(movieId);
         return movieRepository.findMovieSchedulesById(movieId, pageable)
                 .map(this::convertToResponse);
     }
@@ -68,7 +69,7 @@ public class MovieService {
     public Page<MovieResponse> searchMovies(String keyword, int page, int size, String sort) {
         Sort sorting = createSort(sort);
         Pageable pageable = PageRequest.of(page, size, sorting);
-        return movieRepository.searchMoviesByTitleOrDescription(keyword, pageable)
+        return movieRepository.searchMovies(keyword, pageable)
                 .map(this::convertToResponse);
     }
 
@@ -83,12 +84,15 @@ public class MovieService {
     public MovieResponse toggleMovieStatus(Long id) {
         Movie movie = findMovieById(id);
         movie.setIsShowing(!movie.getIsShowing());
+        movie.setUpdatedAt(LocalDateTime.now());
         return convertToResponse(movieRepository.save(movie));
     }
 
     @Transactional
     public MovieResponse createMovie(MovieRequest request) {
         validateMovieRequest(request);
+        LocalDateTime now = LocalDateTime.now();
+
         Movie movie = Movie.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -103,9 +107,10 @@ public class MovieService {
                 .endDate(request.getEndDate())
                 .isShowing(request.getIsShowing())
                 .price(request.getPrice())
+                .score(0.0)
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
 
         return convertToResponse(movieRepository.save(movie));
@@ -176,6 +181,7 @@ public class MovieService {
                 .isShowing(movie.getIsShowing())
                 .price(movie.getPrice())
                 .score(movie.getScore())
+                .active(movie.getActive())
                 .createdAt(movie.getCreatedAt())
                 .updatedAt(movie.getUpdatedAt())
                 .build();

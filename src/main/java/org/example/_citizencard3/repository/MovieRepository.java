@@ -21,62 +21,52 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     // 正在上映的電影
     @Query("SELECT m FROM Movie m WHERE m.isShowing = true " +
-            "AND m.releaseDate <= :currentDate " +
-            "AND m.endDate >= :currentDate")
-    Page<Movie> findNowShowingMovies(
-            @Param("currentDate") LocalDateTime currentDate,
-            Pageable pageable
-    );
+            "AND m.releaseDate <= :now " +
+            "AND m.endDate >= :now " +
+            "AND m.active = true")
+    Page<Movie> findNowShowingMovies(@Param("now") LocalDateTime now, Pageable pageable);
 
     // 即將上映的電影
-    @Query("SELECT m FROM Movie m WHERE m.releaseDate > :currentDate")
-    Page<Movie> findComingSoonMovies(
-            @Param("currentDate") LocalDateTime currentDate,
-            Pageable pageable
-    );
+    @Query("SELECT m FROM Movie m WHERE m.releaseDate > :now AND m.active = true")
+    Page<Movie> findComingSoonMovies(@Param("now") LocalDateTime now, Pageable pageable);
 
     // 電影場次查詢
-    @Query("SELECT m FROM Movie m LEFT JOIN m.schedules s WHERE m.id = :movieId")
-    Page<Movie> findMovieSchedulesById(
-            @Param("movieId") Long movieId,
-            Pageable pageable
-    );
+    @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.schedules s WHERE m.id = :movieId AND m.active = true")
+    Page<Movie> findMovieSchedulesById(@Param("movieId") Long movieId, Pageable pageable);
 
     // 標題或描述模糊搜索
-    @Query("SELECT m FROM Movie m WHERE " +
-            "LOWER(m.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "LOWER(m.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
-    Page<Movie> searchMoviesByTitleOrDescription(
-            @Param("searchTerm") String searchTerm,
-            Pageable pageable
-    );
+    @Query("SELECT m FROM Movie m WHERE m.active = true AND " +
+            "(LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Movie> searchMovies(@Param("keyword") String keyword, Pageable pageable);
 
     // 熱門電影查詢
-    @Query("SELECT m FROM Movie m WHERE m.isShowing = true ORDER BY m.score DESC")
+    @Query("SELECT m FROM Movie m WHERE m.isShowing = true AND m.active = true ORDER BY m.score DESC")
     List<Movie> findTopRatedMovies();
 
     // 獲取所有電影類型
-    @Query("SELECT DISTINCT m.genre FROM Movie m")
+    @Query("SELECT DISTINCT m.genre FROM Movie m WHERE m.active = true")
     List<String> findAllGenres();
 
     // 綜合搜索
-    @Query("SELECT m FROM Movie m WHERE " +
-            "LOWER(m.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+    @Query("SELECT m FROM Movie m WHERE m.active = true AND " +
+            "(LOWER(m.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(m.director) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-            "LOWER(m.cast) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<Movie> searchMovies(@Param("query") String query);
+            "LOWER(m.cast) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<Movie> searchByKeyword(@Param("query") String query);
 
     // 日期範圍查詢
-    @Query("SELECT m FROM Movie m WHERE m.releaseDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT m FROM Movie m WHERE m.active = true AND " +
+            "m.releaseDate BETWEEN :startDate AND :endDate")
     List<Movie> findMoviesByDateRange(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
 
     // 統計查詢
-    @Query("SELECT COUNT(m) FROM Movie m WHERE m.isShowing = true")
+    @Query("SELECT COUNT(m) FROM Movie m WHERE m.isShowing = true AND m.active = true")
     long countActiveMovies();
 
-    @Query("SELECT AVG(m.price) FROM Movie m WHERE m.isShowing = true")
+    @Query("SELECT AVG(m.price) FROM Movie m WHERE m.isShowing = true AND m.active = true")
     Double getAverageTicketPrice();
 }
