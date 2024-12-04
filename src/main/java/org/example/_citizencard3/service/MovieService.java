@@ -45,8 +45,8 @@ public class MovieService {
     public Page<MovieResponse> getNowShowingMovies(int page, int size, String sort) {
         Sort sorting = createSort(sort);
         Pageable pageable = PageRequest.of(page, size, sorting);
-        LocalDateTime now = LocalDateTime.now();
-        return movieRepository.findNowShowingMovies(now, pageable)
+        LocalDateTime currentDate = LocalDateTime.now();
+        return movieRepository.findNowShowingMovies(currentDate, pageable)
                 .map(this::convertToResponse);
     }
 

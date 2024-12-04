@@ -21,10 +21,13 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     // 正在上映的電影
     @Query("SELECT m FROM Movie m WHERE m.isShowing = true " +
-            "AND m.releaseDate <= :now " +
-            "AND m.endDate >= :now " +
+            "AND m.releaseDate <= :currentDate " +
+            "AND m.endDate >= :currentDate " +
             "AND m.active = true")
-    Page<Movie> findNowShowingMovies(@Param("now") LocalDateTime now, Pageable pageable);
+    Page<Movie> findNowShowingMovies(
+            @Param("currentDate") LocalDateTime currentDate,
+            Pageable pageable
+    );
 
     // 即將上映的電影
     @Query("SELECT m FROM Movie m WHERE m.releaseDate > :now AND m.active = true")
@@ -36,10 +39,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     // 標題或描述模糊搜索
     @Query("SELECT m FROM Movie m WHERE m.active = true AND " +
-            "(LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+            "LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Movie> searchMovies(@Param("keyword") String keyword, Pageable pageable);
-
     // 熱門電影查詢
     @Query("SELECT m FROM Movie m WHERE m.isShowing = true AND m.active = true ORDER BY m.score DESC")
     List<Movie> findTopRatedMovies();
