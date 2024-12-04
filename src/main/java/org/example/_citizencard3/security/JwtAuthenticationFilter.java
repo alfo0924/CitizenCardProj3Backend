@@ -29,16 +29,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-            String jwt = getJwtFromRequest(request);
-
-            // 如果沒有token或是公開路徑，直接放行
-            if (!StringUtils.hasText(jwt) || isPublicPath(request)) {
+            // 檢查是否為公開路徑
+            if (isPublicPath(request)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // 驗證token
-            if (jwtTokenProvider.validateToken(jwt)) {
+            String jwt = getJwtFromRequest(request);
+
+            // 如果有token且驗證通過，設置認證信息
+            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
@@ -56,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            log.error("JWT認證處理失敗", e);
+            log.error("JWT認證處理失敗: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
 
@@ -75,10 +75,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
 
-        return requestURI.startsWith("/api/auth/") ||
+        // 檢查是否為公開路徑
+        boolean isPublic = requestURI.startsWith("/api/auth/") ||
                 requestURI.startsWith("/api/public/") ||
-                (requestURI.startsWith("/api/movies/") && "GET".equalsIgnoreCase(method)) ||
-                (requestURI.startsWith("/api/stores/") && "GET".equalsIgnoreCase(method)) ||
                 requestURI.equals("/error");
+
+        // 檢查GET請求的特殊路徑
+        if ("GET".equalsIgnoreCase(method)) {
+            isPublic = isPublic ||
+                    requestURI.startsWith("/api/movies") ||
+                    requestURI.startsWith("/api/stores");
+        }
+
+        return isPublic;
     }
 }
