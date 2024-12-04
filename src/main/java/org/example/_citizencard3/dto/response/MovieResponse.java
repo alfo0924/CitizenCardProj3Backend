@@ -28,4 +28,7 @@ public class MovieResponse {
     private LocalDateTime showTime;
     private String hall;
     private Integer availableSeats;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -7,14 +7,14 @@ import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.Movie;
 import org.example._citizencard3.repository.MovieRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,28 +22,70 @@ public class MovieService {
 
     private final MovieRepository movieRepository;
 
-    // 獲取所有電影
-    public List<MovieResponse> getAllMovies(String title, String genre, int page, int size) {
+    public Page<MovieResponse> getAllMovies(String title, String genre, int page, int size, String sort) {
+        Sort sorting = createSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sorting);
         Page<Movie> movies;
+
         if (title != null && !title.isEmpty()) {
-            movies = movieRepository.findByTitleContaining(title, Pageable.ofSize(size).withPage(page));
+            movies = movieRepository.findByTitleContaining(title, pageable);
         } else if (genre != null && !genre.isEmpty()) {
-            movies = movieRepository.findByGenre(genre, Pageable.ofSize(size).withPage(page));
+            movies = movieRepository.findByGenre(genre, pageable);
         } else {
-            movies = movieRepository.findAll(Pageable.ofSize(size).withPage(page));
+            movies = movieRepository.findAll(pageable);
         }
-        return movies.stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+        return movies.map(this::convertToResponse);
     }
 
-    // 獲取單部電影
     public MovieResponse getMovieById(Long id) {
         Movie movie = findMovieById(id);
         return convertToResponse(movie);
     }
 
-    // 新增電影
+    public Page<MovieResponse> getNowShowingMovies(int page, int size, String sort) {
+        Sort sorting = createSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        LocalDateTime now = LocalDateTime.now();
+        return movieRepository.findNowShowingMovies(now, pageable)
+                .map(this::convertToResponse);
+    }
+
+    public Page<MovieResponse> getComingSoonMovies(int page, int size, String sort) {
+        Sort sorting = createSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        LocalDateTime now = LocalDateTime.now();
+        return movieRepository.findComingSoonMovies(now, pageable)
+                .map(this::convertToResponse);
+    }
+
+    public Page<MovieResponse> getMovieSchedules(Long movieId, int page, int size, String sort) {
+        Sort sorting = createSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        return movieRepository.findMovieSchedulesById(movieId, pageable)
+                .map(this::convertToResponse);
+    }
+
+    public Page<MovieResponse> searchMovies(String keyword, int page, int size, String sort) {
+        Sort sorting = createSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        return movieRepository.searchMoviesByTitleOrDescription(keyword, pageable)
+                .map(this::convertToResponse);
+    }
+
+    public Page<MovieResponse> getMoviesByGenre(String genre, int page, int size, String sort) {
+        Sort sorting = createSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        return movieRepository.findByGenre(genre, pageable)
+                .map(this::convertToResponse);
+    }
+
+    @Transactional
+    public MovieResponse toggleMovieStatus(Long id) {
+        Movie movie = findMovieById(id);
+        movie.setIsShowing(!movie.getIsShowing());
+        return convertToResponse(movieRepository.save(movie));
+    }
+
     @Transactional
     public MovieResponse createMovie(MovieRequest request) {
         validateMovieRequest(request);
@@ -62,13 +104,13 @@ public class MovieService {
                 .isShowing(request.getIsShowing())
                 .price(request.getPrice())
                 .active(true)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
-        movie = movieRepository.save(movie);
-        return convertToResponse(movie);
+        return convertToResponse(movieRepository.save(movie));
     }
 
-    // 更新電影
     @Transactional
     public MovieResponse updateMovie(Long id, MovieRequest request) {
         Movie movie = findMovieById(id);
@@ -87,51 +129,19 @@ public class MovieService {
         movie.setEndDate(request.getEndDate());
         movie.setIsShowing(request.getIsShowing());
         movie.setPrice(request.getPrice());
+        movie.setUpdatedAt(LocalDateTime.now());
 
-        movie = movieRepository.save(movie);
-        return convertToResponse(movie);
+        return convertToResponse(movieRepository.save(movie));
     }
 
-    // 刪除電影
     @Transactional
     public void deleteMovie(Long id) {
         Movie movie = findMovieById(id);
         movie.setActive(false);
+        movie.setUpdatedAt(LocalDateTime.now());
         movieRepository.save(movie);
     }
 
-    // 獲取正在上映的電影
-    public List<MovieResponse> getNowShowingMovies() {
-        LocalDateTime now = LocalDateTime.now();
-        return movieRepository.findByIsShowingTrueAndReleaseDateBeforeAndEndDateAfter(now, now)
-                .stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
-    }
-
-    // 獲取即將上映的電影
-    public List<MovieResponse> getComingSoonMovies() {
-        LocalDateTime now = LocalDateTime.now();
-        return movieRepository.findByReleaseDateAfter(now)
-                .stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
-    }
-
-    // 獲取電影場次
-    public List<MovieResponse> getMovieSchedules(Long movieId) {
-        Movie movie = findMovieById(movieId);
-        return movie.getSchedules().stream()
-                .map(schedule -> MovieResponse.builder()
-                        .id(schedule.getId())
-                        .showTime(schedule.getShowTime())
-                        .hall(schedule.getHall())
-                        .availableSeats(schedule.getAvailableSeats())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    // 輔助方法：查找電影
     private Movie findMovieById(Long id) {
         return movieRepository.findById(id)
                 .orElseThrow(() -> new CustomException(
@@ -140,7 +150,6 @@ public class MovieService {
                 ));
     }
 
-    // 輔助方法：驗證請求
     private void validateMovieRequest(MovieRequest request) {
         if (request.getReleaseDate().isAfter(request.getEndDate())) {
             throw new CustomException(
@@ -150,7 +159,6 @@ public class MovieService {
         }
     }
 
-    // 輔助方法：轉換為響應對象
     private MovieResponse convertToResponse(Movie movie) {
         return MovieResponse.builder()
                 .id(movie.getId())
@@ -168,6 +176,16 @@ public class MovieService {
                 .isShowing(movie.getIsShowing())
                 .price(movie.getPrice())
                 .score(movie.getScore())
+                .createdAt(movie.getCreatedAt())
+                .updatedAt(movie.getUpdatedAt())
                 .build();
+    }
+
+    private Sort createSort(String sort) {
+        String[] parts = sort.split(",");
+        String property = parts[0];
+        Sort.Direction direction = parts.length > 1 && parts[1].equalsIgnoreCase("desc") ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+        return Sort.by(direction, property);
     }
 }
