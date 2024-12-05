@@ -29,47 +29,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-            String jwt = getJwtFromRequest(request);
-
             // 檢查是否為公開路徑
             if (isPublicPath(request)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
+            String jwt = getJwtFromRequest(request);
+
             // 處理需要認證的路徑
-            if (StringUtils.hasText(jwt)) {
-                if (jwtTokenProvider.validateToken(jwt)) {
-                    String email = jwtTokenProvider.getEmailFromToken(jwt);
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+                String email = jwtTokenProvider.getEmailFromToken(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                filterChain.doFilter(request, response);
             } else {
-                // 非公開路徑且沒有token
-                if (!isPublicPath(request)) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
-                }
+                // 非公開路徑且沒有有效token
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Unauthorized: Invalid or missing token");
+                return;
             }
 
         } catch (Exception e) {
             log.error("JWT認證處理失敗: {}", e.getMessage());
             SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Authentication failed: " + e.getMessage());
+            return;
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
@@ -87,7 +83,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 基本公開路徑
         if (requestURI.startsWith("/api/auth/") ||
                 requestURI.startsWith("/api/public/") ||
-                requestURI.equals("/error")) {
+                requestURI.equals("/error") ||
+                requestURI.startsWith("/swagger-ui/") ||
+                requestURI.startsWith("/v3/api-docs/")) {
             return true;
         }
 
