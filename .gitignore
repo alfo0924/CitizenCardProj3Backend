@@ -18,7 +18,7 @@ target/
 *.iws
 *.iml
 *.ipr
-logs/
+
 
 ### NetBeans ###
 /nbproject/private/
@@ -33,3 +33,5 @@ build/
 ### VS Code ###
 .vscode/
 
+### Logs ###
+logs/application.log
