@@ -32,6 +32,9 @@ public class Schedule {
     @Column(nullable = false)
     private Integer availableSeats;
 
+    @Column(name = "total_seats", nullable = false)
+    private Integer totalSeats;
+
     @Column(nullable = false)
     private Boolean active = true;
 
