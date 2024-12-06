@@ -1254,3 +1254,51 @@ org.springframework.web.servlet.resource.NoResourceFoundException: No static res
 2024-12-06T13:49:25.088+08:00 DEBUG 73480 --- [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /movies
 2024-12-06T13:49:25.089+08:00 DEBUG 73480 --- [http-nio-8080-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
 2024-12-06T13:49:25.089+08:00 DEBUG 73480 --- [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /movies
+2024-12-06T13:52:14.275+08:00  INFO 73480 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-12-06T13:52:14.277+08:00  INFO 73480 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2024-12-06T13:52:14.359+08:00  INFO 73480 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2024-12-06T13:52:17.051+08:00  INFO 62080 --- [main] org.example._citizencard3.Application    : Starting Application using Java 17.0.12 with PID 62080 (C:\Users\user\IdeaProjects\CitiZenCard3.1\target\classes started by user in C:\Users\user\IdeaProjects\CitiZenCard3.1)
+2024-12-06T13:52:17.053+08:00 DEBUG 62080 --- [main] org.example._citizencard3.Application    : Running with Spring Boot v3.2.1, Spring v6.1.2
+2024-12-06T13:52:17.053+08:00  INFO 62080 --- [main] org.example._citizencard3.Application    : No active profile set, falling back to 1 default profile: "default"
+2024-12-06T13:52:17.415+08:00  INFO 62080 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-06T13:52:17.451+08:00  INFO 62080 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 33 ms. Found 3 JPA repository interfaces.
+2024-12-06T13:52:17.750+08:00  INFO 62080 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2024-12-06T13:52:17.759+08:00  INFO 62080 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2024-12-06T13:52:17.760+08:00  INFO 62080 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2024-12-06T13:52:17.793+08:00  INFO 62080 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2024-12-06T13:52:17.793+08:00  INFO 62080 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 715 ms
+2024-12-06T13:52:17.858+08:00  INFO 62080 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-06T13:52:17.882+08:00  INFO 62080 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
+2024-12-06T13:52:17.897+08:00  INFO 62080 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2024-12-06T13:52:18.012+08:00  INFO 62080 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-06T13:52:18.026+08:00  INFO 62080 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-06T13:52:18.297+08:00  INFO 62080 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@1805383
+2024-12-06T13:52:18.298+08:00  INFO 62080 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-06T13:52:18.899+08:00  INFO 62080 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-06T13:52:19.400+08:00  INFO 62080 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-06T13:52:19.523+08:00  INFO 62080 --- [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2024-12-06T13:52:19.812+08:00 DEBUG 62080 --- [main] o.e._.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2024-12-06T13:52:20.250+08:00  INFO 62080 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@15516e5a, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@28336feb, org.springframework.security.web.context.SecurityContextHolderFilter@9f7a8cc, org.springframework.security.web.header.HeaderWriterFilter@3e47d465, org.springframework.web.filter.CorsFilter@3035b9e6, org.springframework.security.web.authentication.logout.LogoutFilter@7effdd04, org.example._citizencard3.security.JwtAuthenticationFilter@6cf7de4e, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@2a6ca8d0, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@1bffbac, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@f75843e, org.springframework.security.web.session.SessionManagementFilter@29ec693e, org.springframework.security.web.access.ExceptionTranslationFilter@143ec23b, org.springframework.security.web.access.intercept.AuthorizationFilter@72f9e4c7]
+2024-12-06T13:52:20.374+08:00  INFO 62080 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2024-12-06T13:52:20.379+08:00  INFO 62080 --- [main] org.example._citizencard3.Application    : Started Application in 3.572 seconds (process running for 3.927)
+2024-12-06T13:53:15.547+08:00  INFO 62080 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-12-06T13:53:15.548+08:00  INFO 62080 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2024-12-06T13:53:15.628+08:00  INFO 62080 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2024-12-06T13:53:17.129+08:00  INFO 64716 --- [main] org.example._citizencard3.Application    : Starting Application using Java 17.0.12 with PID 64716 (C:\Users\user\IdeaProjects\CitiZenCard3.1\target\classes started by user in C:\Users\user\IdeaProjects\CitiZenCard3.1)
+2024-12-06T13:53:17.130+08:00 DEBUG 64716 --- [main] org.example._citizencard3.Application    : Running with Spring Boot v3.2.1, Spring v6.1.2
+2024-12-06T13:53:17.131+08:00  INFO 64716 --- [main] org.example._citizencard3.Application    : No active profile set, falling back to 1 default profile: "default"
+2024-12-06T13:53:17.482+08:00  INFO 64716 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-06T13:53:17.523+08:00  INFO 64716 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 36 ms. Found 3 JPA repository interfaces.
+2024-12-06T13:53:17.814+08:00  INFO 64716 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2024-12-06T13:53:17.819+08:00  INFO 64716 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2024-12-06T13:53:17.819+08:00  INFO 64716 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2024-12-06T13:53:17.844+08:00  INFO 64716 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2024-12-06T13:53:17.844+08:00  INFO 64716 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 686 ms
+2024-12-06T13:53:17.910+08:00  INFO 64716 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-06T13:53:17.936+08:00  INFO 64716 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
+2024-12-06T13:53:17.951+08:00  INFO 64716 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2024-12-06T13:53:18.056+08:00  INFO 64716 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-06T13:53:18.070+08:00  INFO 64716 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-06T13:53:18.357+08:00  INFO 64716 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@7d88fa9c
+2024-12-06T13:53:18.357+08:00  INFO 64716 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-06T13:53:18.998+08:00  INFO 64716 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
