@@ -1,60 +1,33 @@
-2024-12-06T14:02:29.303+08:00  INFO 63972 --- [main] org.example._citizencard3.Application    : Starting Application using Java 17.0.12 with PID 63972 (C:\Users\user\IdeaProjects\CitiZenCard3.1\target\classes started by user in C:\Users\user\IdeaProjects\CitiZenCard3.1)
-2024-12-06T14:02:29.304+08:00 DEBUG 63972 --- [main] org.example._citizencard3.Application    : Running with Spring Boot v3.2.1, Spring v6.1.2
-2024-12-06T14:02:29.304+08:00  INFO 63972 --- [main] org.example._citizencard3.Application    : No active profile set, falling back to 1 default profile: "default"
-2024-12-06T14:02:29.675+08:00  INFO 63972 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2024-12-06T14:02:29.714+08:00  INFO 63972 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 33 ms. Found 3 JPA repository interfaces.
-2024-12-06T14:02:29.997+08:00  INFO 63972 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2024-12-06T14:02:30.002+08:00  INFO 63972 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2024-12-06T14:02:30.002+08:00  INFO 63972 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
-2024-12-06T14:02:30.030+08:00  INFO 63972 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
-2024-12-06T14:02:30.030+08:00  INFO 63972 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 699 ms
-2024-12-06T14:02:30.089+08:00  INFO 63972 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2024-12-06T14:02:30.118+08:00  INFO 63972 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
-2024-12-06T14:02:30.135+08:00  INFO 63972 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2024-12-06T14:02:30.250+08:00  INFO 63972 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2024-12-06T14:02:30.266+08:00  INFO 63972 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2024-12-06T14:02:30.532+08:00  INFO 63972 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@352f6727
-2024-12-06T14:02:30.533+08:00  INFO 63972 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2024-12-06T14:02:31.166+08:00  INFO 63972 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2024-12-06T14:02:31.680+08:00  INFO 63972 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2024-12-06T14:02:31.800+08:00  INFO 63972 --- [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
-2024-12-06T14:02:32.078+08:00 DEBUG 63972 --- [main] o.e._.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
-2024-12-06T14:02:32.509+08:00  INFO 63972 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@67fd59f, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@12680685, org.springframework.security.web.context.SecurityContextHolderFilter@4a02197b, org.springframework.security.web.header.HeaderWriterFilter@7148320d, org.springframework.web.filter.CorsFilter@72f9e4c7, org.springframework.security.web.authentication.logout.LogoutFilter@513ad29e, org.example._citizencard3.security.JwtAuthenticationFilter@4baf0b7f, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@29ec693e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@33db58ce, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3ff4ed56, org.springframework.security.web.session.SessionManagementFilter@66709528, org.springframework.security.web.access.ExceptionTranslationFilter@74e3836a, org.springframework.security.web.access.intercept.AuthorizationFilter@2bc7e895]
-2024-12-06T14:02:32.633+08:00  INFO 63972 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
-2024-12-06T14:02:32.638+08:00  INFO 63972 --- [main] org.example._citizencard3.Application    : Started Application in 3.579 seconds (process running for 3.903)
-2024-12-06T14:02:46.253+08:00  INFO 63972 --- [http-nio-8080-exec-5] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2024-12-06T14:02:46.253+08:00  INFO 63972 --- [http-nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2024-12-06T14:02:46.253+08:00  INFO 63972 --- [http-nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
-2024-12-06T14:02:46.262+08:00 DEBUG 63972 --- [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /movies
-2024-12-06T14:02:46.270+08:00 DEBUG 63972 --- [http-nio-8080-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
-2024-12-06T14:02:46.272+08:00 DEBUG 63972 --- [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /movies
-2024-12-06T14:02:53.859+08:00 DEBUG 63972 --- [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /stores
-2024-12-06T14:02:53.859+08:00 DEBUG 63972 --- [http-nio-8080-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
-2024-12-06T14:02:53.859+08:00 DEBUG 63972 --- [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /stores
-2024-12-06T14:03:26.445+08:00  INFO 63972 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
-2024-12-06T14:03:26.447+08:00  INFO 63972 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2024-12-06T14:03:26.539+08:00  INFO 63972 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2024-12-06T14:04:27.961+08:00  INFO 78080 --- [main] org.example._citizencard3.Application    : Starting Application using Java 17.0.12 with PID 78080 (C:\Users\user\IdeaProjects\CitiZenCard3.1\target\classes started by user in C:\Users\user\IdeaProjects\CitiZenCard3.1)
-2024-12-06T14:04:27.962+08:00 DEBUG 78080 --- [main] org.example._citizencard3.Application    : Running with Spring Boot v3.2.1, Spring v6.1.2
-2024-12-06T14:04:27.963+08:00  INFO 78080 --- [main] org.example._citizencard3.Application    : No active profile set, falling back to 1 default profile: "default"
-2024-12-06T14:04:28.336+08:00  INFO 78080 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2024-12-06T14:04:28.368+08:00  INFO 78080 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 28 ms. Found 3 JPA repository interfaces.
-2024-12-06T14:04:28.652+08:00  INFO 78080 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2024-12-06T14:04:28.658+08:00  INFO 78080 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2024-12-06T14:04:28.659+08:00  INFO 78080 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
-2024-12-06T14:04:28.687+08:00  INFO 78080 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
-2024-12-06T14:04:28.687+08:00  INFO 78080 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 697 ms
-2024-12-06T14:04:28.758+08:00  INFO 78080 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2024-12-06T14:04:28.786+08:00  INFO 78080 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
-2024-12-06T14:04:28.803+08:00  INFO 78080 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2024-12-06T14:04:28.926+08:00  INFO 78080 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2024-12-06T14:04:28.941+08:00  INFO 78080 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2024-12-06T14:04:29.291+08:00  INFO 78080 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@2084e65a
-2024-12-06T14:04:29.293+08:00  INFO 78080 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2024-12-06T14:04:29.938+08:00  INFO 78080 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2024-12-06T14:04:30.485+08:00  INFO 78080 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2024-12-06T14:04:30.596+08:00  INFO 78080 --- [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
-2024-12-06T14:04:30.879+08:00 DEBUG 78080 --- [main] o.e._.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
-2024-12-06T14:04:31.313+08:00  INFO 78080 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@29ec693e, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@33db58ce, org.springframework.security.web.context.SecurityContextHolderFilter@36fd028d, org.springframework.security.web.header.HeaderWriterFilter@a56277b, org.springframework.web.filter.CorsFilter@6948460f, org.springframework.security.web.authentication.logout.LogoutFilter@3e47d465, org.example._citizencard3.security.JwtAuthenticationFilter@3c320c8b, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@c3976d4, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@7dc97564, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@9f7a8cc, org.springframework.security.web.session.SessionManagementFilter@785b187e, org.springframework.security.web.access.ExceptionTranslationFilter@3434890, org.springframework.security.web.access.intercept.AuthorizationFilter@23673954]
-2024-12-06T14:04:31.460+08:00  INFO 78080 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
-2024-12-06T14:04:31.465+08:00  INFO 78080 --- [main] org.example._citizencard3.Application    : Started Application in 3.774 seconds (process running for 4.126)
+2024-12-06T14:16:49.412+08:00  INFO 88560 --- [main] org.example._citizencard3.Application    : Starting Application using Java 17.0.12 with PID 88560 (C:\Users\user\IdeaProjects\CitiZenCard3.1\target\classes started by user in C:\Users\user\IdeaProjects\CitiZenCard3.1)
+2024-12-06T14:16:49.413+08:00 DEBUG 88560 --- [main] org.example._citizencard3.Application    : Running with Spring Boot v3.2.1, Spring v6.1.2
+2024-12-06T14:16:49.413+08:00  INFO 88560 --- [main] org.example._citizencard3.Application    : No active profile set, falling back to 1 default profile: "default"
+2024-12-06T14:16:49.782+08:00  INFO 88560 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-06T14:16:49.815+08:00  INFO 88560 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 27 ms. Found 3 JPA repository interfaces.
+2024-12-06T14:16:50.113+08:00  INFO 88560 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2024-12-06T14:16:50.119+08:00  INFO 88560 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2024-12-06T14:16:50.119+08:00  INFO 88560 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2024-12-06T14:16:50.149+08:00  INFO 88560 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2024-12-06T14:16:50.150+08:00  INFO 88560 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 710 ms
+2024-12-06T14:16:50.206+08:00  INFO 88560 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-06T14:16:50.237+08:00  INFO 88560 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
+2024-12-06T14:16:50.255+08:00  INFO 88560 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2024-12-06T14:16:50.374+08:00  INFO 88560 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-06T14:16:50.392+08:00  INFO 88560 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-06T14:16:50.657+08:00  INFO 88560 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@6481dce5
+2024-12-06T14:16:50.658+08:00  INFO 88560 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-06T14:16:51.319+08:00  INFO 88560 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-06T14:16:51.834+08:00  INFO 88560 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-06T14:16:51.956+08:00  INFO 88560 --- [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2024-12-06T14:16:52.263+08:00 DEBUG 88560 --- [main] o.e._.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2024-12-06T14:16:52.845+08:00  INFO 88560 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2f8b373f, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2e1bbf2a, org.springframework.security.web.context.SecurityContextHolderFilter@21eeb0ce, org.springframework.security.web.header.HeaderWriterFilter@6f3cbc1f, org.springframework.web.filter.CorsFilter@3a0f0552, org.springframework.security.web.authentication.logout.LogoutFilter@3767973, org.example._citizencard3.security.JwtAuthenticationFilter@3443732a, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@15682e7f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@74e3836a, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@47b530e0, org.springframework.security.web.session.SessionManagementFilter@49c83038, org.springframework.security.web.access.ExceptionTranslationFilter@1e20dad5, org.springframework.security.web.access.intercept.AuthorizationFilter@1772cc68]
+2024-12-06T14:16:53.013+08:00  INFO 88560 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2024-12-06T14:16:53.018+08:00  INFO 88560 --- [main] org.example._citizencard3.Application    : Started Application in 3.874 seconds (process running for 4.225)
+2024-12-06T14:18:07.180+08:00  INFO 88560 --- [http-nio-8080-exec-4] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-12-06T14:18:07.180+08:00  INFO 88560 --- [http-nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2024-12-06T14:18:07.181+08:00  INFO 88560 --- [http-nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2024-12-06T14:18:07.200+08:00 DEBUG 88560 --- [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /movies
+2024-12-06T14:18:07.204+08:00 DEBUG 88560 --- [http-nio-8080-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T14:18:07.205+08:00 DEBUG 88560 --- [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /movies
+2024-12-06T14:18:19.356+08:00 DEBUG 88560 --- [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /movies
+2024-12-06T14:18:19.357+08:00 DEBUG 88560 --- [http-nio-8080-exec-3] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T14:18:19.357+08:00 DEBUG 88560 --- [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /movies
