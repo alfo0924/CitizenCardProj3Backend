@@ -1,0 +1,51 @@
+2024-12-06T11:17:52.524+08:00  INFO 33048 --- [main] org.example._citizencard3.Application    : Starting Application using Java 17.0.12 with PID 33048 (C:\Users\user\IdeaProjects\CitiZenCard3.1\target\classes started by user in C:\Users\user\IdeaProjects\CitiZenCard3.1)
+2024-12-06T11:17:52.525+08:00 DEBUG 33048 --- [main] org.example._citizencard3.Application    : Running with Spring Boot v3.2.1, Spring v6.1.2
+2024-12-06T11:17:52.526+08:00  INFO 33048 --- [main] org.example._citizencard3.Application    : No active profile set, falling back to 1 default profile: "default"
+2024-12-06T11:17:52.892+08:00  INFO 33048 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-06T11:17:52.930+08:00  INFO 33048 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 33 ms. Found 3 JPA repository interfaces.
+2024-12-06T11:17:53.218+08:00  INFO 33048 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2024-12-06T11:17:53.224+08:00  INFO 33048 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2024-12-06T11:17:53.224+08:00  INFO 33048 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2024-12-06T11:17:53.255+08:00  INFO 33048 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2024-12-06T11:17:53.255+08:00  INFO 33048 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 703 ms
+2024-12-06T11:17:53.320+08:00  INFO 33048 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-06T11:17:53.343+08:00  INFO 33048 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
+2024-12-06T11:17:53.364+08:00  INFO 33048 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2024-12-06T11:17:53.505+08:00  INFO 33048 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-06T11:17:53.520+08:00  INFO 33048 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-06T11:17:53.826+08:00  INFO 33048 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@6481dce5
+2024-12-06T11:17:53.827+08:00  INFO 33048 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-06T11:17:54.550+08:00  INFO 33048 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-06T11:17:55.112+08:00  INFO 33048 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-06T11:17:55.229+08:00  INFO 33048 --- [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2024-12-06T11:17:55.517+08:00 DEBUG 33048 --- [main] o.e._.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2024-12-06T11:17:55.942+08:00  INFO 33048 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2f8b373f, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2e1bbf2a, org.springframework.security.web.context.SecurityContextHolderFilter@21eeb0ce, org.springframework.security.web.header.HeaderWriterFilter@6f3cbc1f, org.springframework.web.filter.CorsFilter@3a0f0552, org.springframework.security.web.authentication.logout.LogoutFilter@3767973, org.example._citizencard3.security.JwtAuthenticationFilter@3443732a, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@15682e7f, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@74e3836a, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@47b530e0, org.springframework.security.web.session.SessionManagementFilter@49c83038, org.springframework.security.web.access.ExceptionTranslationFilter@1e20dad5, org.springframework.security.web.access.intercept.AuthorizationFilter@1772cc68]
+2024-12-06T11:17:56.095+08:00  INFO 33048 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2024-12-06T11:17:56.099+08:00  INFO 33048 --- [main] org.example._citizencard3.Application    : Started Application in 3.832 seconds (process running for 4.218)
+2024-12-06T11:18:08.768+08:00  INFO 33048 --- [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-12-06T11:18:08.769+08:00  INFO 33048 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2024-12-06T11:18:08.769+08:00  INFO 33048 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2024-12-06T11:18:08.779+08:00 DEBUG 33048 --- [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /movies
+2024-12-06T11:18:08.783+08:00 DEBUG 33048 --- [http-nio-8080-exec-2] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T11:18:08.784+08:00 DEBUG 33048 --- [http-nio-8080-exec-2] o.s.s.w.a.Http403ForbiddenEntryPoint     : Pre-authenticated entry point called. Rejecting access
+2024-12-06T11:18:08.788+08:00 DEBUG 33048 --- [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /error
+2024-12-06T11:18:08.789+08:00 DEBUG 33048 --- [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /error
+2024-12-06T11:18:08.824+08:00 DEBUG 33048 --- [http-nio-8080-exec-2] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T11:18:18.070+08:00 DEBUG 33048 --- [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /movies
+2024-12-06T11:18:18.071+08:00 DEBUG 33048 --- [http-nio-8080-exec-3] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T11:18:18.072+08:00 DEBUG 33048 --- [http-nio-8080-exec-3] o.s.s.w.a.Http403ForbiddenEntryPoint     : Pre-authenticated entry point called. Rejecting access
+2024-12-06T11:18:18.073+08:00 DEBUG 33048 --- [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /error
+2024-12-06T11:18:18.073+08:00 DEBUG 33048 --- [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /error
+2024-12-06T11:18:18.074+08:00 DEBUG 33048 --- [http-nio-8080-exec-3] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T11:18:27.250+08:00 DEBUG 33048 --- [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /movies
+2024-12-06T11:18:27.251+08:00 DEBUG 33048 --- [http-nio-8080-exec-6] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T11:18:27.251+08:00 DEBUG 33048 --- [http-nio-8080-exec-6] o.s.s.w.a.Http403ForbiddenEntryPoint     : Pre-authenticated entry point called. Rejecting access
+2024-12-06T11:18:27.252+08:00 DEBUG 33048 --- [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /error
+2024-12-06T11:18:27.252+08:00 DEBUG 33048 --- [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Secured GET /error
+2024-12-06T11:18:27.254+08:00 DEBUG 33048 --- [http-nio-8080-exec-6] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T11:18:27.624+08:00 DEBUG 33048 --- [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /movies
+2024-12-06T11:18:27.624+08:00 DEBUG 33048 --- [http-nio-8080-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2024-12-06T11:18:27.625+08:00 DEBUG 33048 --- [http-nio-8080-exec-5] o.s.s.w.a.Http403ForbiddenEntryPoint     : Pre-authenticated entry point called. Rejecting access
+2024-12-06T11:18:27.626+08:00 DEBUG 33048 --- [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /error
+2024-12-06T11:18:27.626+08:00 DEBUG 33048 --- [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /error
+2024-12-06T11:18:27.628+08:00 DEBUG 33048 --- [http-nio-8080-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
