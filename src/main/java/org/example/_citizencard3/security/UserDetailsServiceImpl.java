@@ -3,7 +3,6 @@ package org.example._citizencard3.security;
 import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.User;
-
 import org.example._citizencard3.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,7 +38,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
                 .authorities(Collections.singletonList(
-                        new SimpleGrantedAuthority(user.getRole().name())
+                        new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
                 ))
                 .accountExpired(false)
                 .accountLocked(false)
@@ -48,7 +47,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .build();
     }
 
-    // 根據ID獲取用戶
     public UserDetails loadUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(
@@ -56,11 +54,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                         HttpStatus.NOT_FOUND
                 ));
 
+        if (!user.isActive()) {
+            throw new CustomException(
+                    "帳號已被停用",
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
                 .authorities(Collections.singletonList(
-                        new SimpleGrantedAuthority(user.getRole().name())
+                        new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
                 ))
                 .accountExpired(false)
                 .accountLocked(false)

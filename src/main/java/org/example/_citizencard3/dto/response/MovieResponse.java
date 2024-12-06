@@ -20,6 +20,7 @@ public class MovieResponse {
     private LocalDateTime releaseDate;
     private LocalDateTime endDate;
     private Boolean isShowing;
+    private Boolean active;
     private Integer price;
     private Double score;
     private String description;
@@ -28,4 +29,7 @@ public class MovieResponse {
     private LocalDateTime showTime;
     private String hall;
     private Integer availableSeats;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
