@@ -37,38 +37,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String jwt = getJwtFromRequest(request);
 
-            // 處理需要認證的路徑
-            if (StringUtils.hasText(jwt)) {
-                try {
-                    if (jwtTokenProvider.validateToken(jwt)) {
-                        String email = jwtTokenProvider.getEmailFromToken(jwt);
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails,
-                                        null,
-                                        userDetails.getAuthorities()
-                                );
-
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        filterChain.doFilter(request, response);
-                        return;
-                    }
-                } catch (Exception e) {
-                    log.error("Token驗證失敗: {}", e.getMessage());
-                }
+            // 如果沒有token且不是公開路徑，直接放行給後續的過濾器處理
+            if (!StringUtils.hasText(jwt)) {
+                filterChain.doFilter(request, response);
+                return;
             }
 
-            // 非公開路徑且沒有有效token
+            // 驗證token並設置認證信息
+            if (jwtTokenProvider.validateToken(jwt)) {
+                String email = jwtTokenProvider.getEmailFromToken(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             log.error("JWT認證處理失敗: {}", e.getMessage());
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authentication failed: " + e.getMessage());
         }
     }
 

@@ -41,20 +41,13 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 公開路徑
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        // 允許未登入用戶訪問電影和商店資訊
-                        .requestMatchers(HttpMethod.GET, "/movies").permitAll()
                         .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/stores").permitAll()
                         .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
-                        // Swagger UI路徑
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // 管理員路徑
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // 其他路徑需要認證
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(),

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping("/movies")  // 移除/api前綴，因為已經在application.properties中設置了
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:8080", "http://localhost:3000"})
 public class MovieController {
@@ -34,29 +34,6 @@ public class MovieController {
     @GetMapping("/{id}")
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
         return ResponseEntity.ok(movieService.getMovieById(id));
-    }
-
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MovieResponse> createMovie(@Valid @RequestBody MovieRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(movieService.createMovie(request));
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MovieResponse> updateMovie(
-            @PathVariable Long id,
-            @Valid @RequestBody MovieRequest request
-    ) {
-        return ResponseEntity.ok(movieService.updateMovie(id, request));
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
-        movieService.deleteMovie(id);
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/now-showing")
@@ -105,6 +82,29 @@ public class MovieController {
             @RequestParam(defaultValue = "releaseDate,desc") String sort
     ) {
         return ResponseEntity.ok(movieService.getMoviesByGenre(genre, page, size, sort));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MovieResponse> createMovie(@Valid @RequestBody MovieRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(movieService.createMovie(request));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MovieResponse> updateMovie(
+            @PathVariable Long id,
+            @Valid @RequestBody MovieRequest request
+    ) {
+        return ResponseEntity.ok(movieService.updateMovie(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
+        movieService.deleteMovie(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/toggle-status")
