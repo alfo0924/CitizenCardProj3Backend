@@ -1365,3 +1365,27 @@ org.springframework.web.servlet.resource.NoResourceFoundException: No static res
 2024-12-06T13:55:08.436+08:00  INFO 79364 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
 2024-12-06T13:55:08.437+08:00  INFO 79364 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
 2024-12-06T13:55:08.530+08:00  INFO 79364 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2024-12-06T13:55:10.534+08:00  INFO 77288 --- [main] org.example._citizencard3.Application    : Starting Application using Java 17.0.12 with PID 77288 (C:\Users\user\IdeaProjects\CitiZenCard3.1\target\classes started by user in C:\Users\user\IdeaProjects\CitiZenCard3.1)
+2024-12-06T13:55:10.535+08:00 DEBUG 77288 --- [main] org.example._citizencard3.Application    : Running with Spring Boot v3.2.1, Spring v6.1.2
+2024-12-06T13:55:10.535+08:00  INFO 77288 --- [main] org.example._citizencard3.Application    : No active profile set, falling back to 1 default profile: "default"
+2024-12-06T13:55:10.895+08:00  INFO 77288 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-06T13:55:10.928+08:00  INFO 77288 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 30 ms. Found 3 JPA repository interfaces.
+2024-12-06T13:55:11.232+08:00  INFO 77288 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2024-12-06T13:55:11.237+08:00  INFO 77288 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2024-12-06T13:55:11.237+08:00  INFO 77288 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2024-12-06T13:55:11.264+08:00  INFO 77288 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2024-12-06T13:55:11.265+08:00  INFO 77288 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 703 ms
+2024-12-06T13:55:11.322+08:00  INFO 77288 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-06T13:55:11.347+08:00  INFO 77288 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
+2024-12-06T13:55:11.360+08:00  INFO 77288 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2024-12-06T13:55:11.477+08:00  INFO 77288 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-06T13:55:11.493+08:00  INFO 77288 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-06T13:55:11.778+08:00  INFO 77288 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.mariadb.jdbc.Connection@2ab9e43e
+2024-12-06T13:55:11.779+08:00  INFO 77288 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-06T13:55:12.430+08:00  INFO 77288 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-06T13:55:12.946+08:00  INFO 77288 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-06T13:55:13.056+08:00  INFO 77288 --- [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2024-12-06T13:55:13.340+08:00 DEBUG 77288 --- [main] o.e._.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2024-12-06T13:55:13.947+08:00  INFO 77288 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2bd01716, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2bc7e895, org.springframework.security.web.context.SecurityContextHolderFilter@328b60fb, org.springframework.security.web.header.HeaderWriterFilter@29af0d3b, org.springframework.web.filter.CorsFilter@2ff9e11e, org.springframework.security.web.authentication.logout.LogoutFilter@3171c5e6, org.example._citizencard3.security.JwtAuthenticationFilter@60a6564c, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@12326ccb, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@23673954, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2d3c0f89, org.springframework.security.web.session.SessionManagementFilter@39cdbc4e, org.springframework.security.web.access.ExceptionTranslationFilter@6c81bd6d, org.springframework.security.web.access.intercept.AuthorizationFilter@7effdd04]
+2024-12-06T13:55:14.183+08:00  INFO 77288 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2024-12-06T13:55:14.191+08:00  INFO 77288 --- [main] org.example._citizencard3.Application    : Started Application in 3.905 seconds (process running for 4.253)
