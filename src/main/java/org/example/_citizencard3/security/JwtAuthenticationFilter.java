@@ -29,7 +29,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-            // 檢查是否為公開路徑
             if (isPublicPath(request)) {
                 filterChain.doFilter(request, response);
                 return;
@@ -37,8 +36,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String jwt = getJwtFromRequest(request);
 
-            // 處理需要認證的路徑
-            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+            if (!StringUtils.hasText(jwt)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+
+            if (jwtTokenProvider.validateToken(jwt)) {
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
@@ -51,20 +54,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                filterChain.doFilter(request, response);
-            } else {
-                // 非公開路徑且沒有有效token
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Unauthorized: Invalid or missing token");
-                return;
             }
+
+            filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             log.error("JWT認證處理失敗: {}", e.getMessage());
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authentication failed: " + e.getMessage());
-            return;
         }
     }
 
@@ -77,22 +74,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicPath(HttpServletRequest request) {
-        String requestURI = request.getRequestURI();
+        String path = request.getRequestURI();
         String method = request.getMethod();
 
-        // 基本公開路徑
-        if (requestURI.startsWith("/api/auth/") ||
-                requestURI.startsWith("/api/public/") ||
-                requestURI.equals("/error") ||
-                requestURI.startsWith("/swagger-ui/") ||
-                requestURI.startsWith("/v3/api-docs/")) {
+        if (path.startsWith("/api/auth/") ||
+                path.startsWith("/api/public/") ||
+                path.equals("/error") ||
+                path.startsWith("/swagger-ui/") ||
+                path.startsWith("/v3/api-docs/")) {
             return true;
         }
 
-        // GET請求的特殊公開路徑
         if ("GET".equalsIgnoreCase(method)) {
-            return requestURI.startsWith("/api/movies") ||
-                    requestURI.startsWith("/api/stores");
+            return path.startsWith("/api/movies") ||
+                    path.startsWith("/api/stores");
         }
 
         return false;

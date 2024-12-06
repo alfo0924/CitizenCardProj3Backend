@@ -10,10 +10,38 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:8080") // Vue.js 開發伺服器的位址
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
+                .allowedOrigins(
+                        "http://localhost:8080",
+                        "http://localhost:3000"
+                )
+                .allowedMethods(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS",
+                        "PATCH",
+                        "HEAD"
+                )
+                .allowedHeaders(
+                        "Authorization",
+                        "Content-Type",
+                        "X-Requested-With",
+                        "Accept",
+                        "Origin",
+                        "Access-Control-Request-Method",
+                        "Access-Control-Request-Headers",
+                        "Refresh-Token",
+                        "Cache-Control",
+                        "Pragma"
+                )
+                .exposedHeaders(
+                        "Access-Control-Allow-Origin",
+                        "Access-Control-Allow-Credentials",
+                        "Authorization",
+                        "Refresh-Token"
+                )
                 .allowCredentials(true)
-                .maxAge(3600); // 快取時間
+                .maxAge(3600L);
     }
 }

@@ -41,22 +41,31 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 公開路徑
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        // 允許未登入用戶訪問電影和商店資訊
-                        .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/stores/**").permitAll()
-                        // Swagger UI路徑
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // 管理員路徑
+                        // 不需要認證的路徑
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/public/**",
+                                "/error",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        // 允許GET請求訪問電影和商店資訊
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/movies",
+                                "/api/movies/**",
+                                "/api/stores",
+                                "/api/stores/**"
+                        ).permitAll()
+                        // 管理員專用路徑
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // 其他路徑需要認證
+                        // 其他所有請求都需要認證
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        jwtAuthenticationFilter(),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
@@ -69,7 +78,7 @@ public class SecurityConfig {
                 "http://localhost:3000"
         ));
         configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
@@ -82,7 +91,8 @@ public class SecurityConfig {
         ));
         configuration.setExposedHeaders(Arrays.asList(
                 "Access-Control-Allow-Origin",
-                "Access-Control-Allow-Credentials"
+                "Access-Control-Allow-Credentials",
+                "Authorization"
         ));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);

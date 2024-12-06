@@ -11,7 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/movies")
@@ -29,8 +28,7 @@ public class MovieController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "releaseDate,desc") String sort
     ) {
-        Page<MovieResponse> movies = movieService.getAllMovies(title, genre, page, size, sort);
-        return ResponseEntity.ok(movies);
+        return ResponseEntity.ok(movieService.getAllMovies(title, genre, page, size, sort));
     }
 
     @GetMapping("/{id}")
@@ -41,8 +39,8 @@ public class MovieController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieResponse> createMovie(@Valid @RequestBody MovieRequest request) {
-        MovieResponse movie = movieService.createMovie(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(movie);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(movieService.createMovie(request));
     }
 
     @PutMapping("/{id}")
