@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = {"http://localhost:8080", "http://localhost:3009"})
 public class AuthController {
 
     private final AuthService authService;
@@ -33,50 +33,35 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
         authService.logout(token);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/profile")
     public ResponseEntity<UserResponse> getProfile(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
         UserResponse response = authService.getProfile(token);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/check")
     public ResponseEntity<Boolean> checkToken(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
         boolean isValid = authService.validateToken(token);
         return ResponseEntity.ok(isValid);
-    }
-
-    @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refreshToken(
-            @RequestHeader("Authorization") String token,
-            @RequestHeader("Refresh-Token") String refreshToken
-    ) {
-        LoginResponse response = authService.refreshToken(token, refreshToken);
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/validate-email")
     public ResponseEntity<Boolean> validateEmail(@RequestParam String email) {
         boolean isAvailable = authService.isEmailAvailable(email);
         return ResponseEntity.ok(isAvailable);
-    }
-
-    @PostMapping("/forgot-password")
-    public ResponseEntity<Void> forgotPassword(@RequestParam String email) {
-        authService.sendPasswordResetEmail(email);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<Void> resetPassword(
-            @RequestParam String token,
-            @RequestParam String newPassword
-    ) {
-        authService.resetPassword(token, newPassword);
-        return ResponseEntity.ok().build();
     }
 
     @ExceptionHandler(Exception.class)
