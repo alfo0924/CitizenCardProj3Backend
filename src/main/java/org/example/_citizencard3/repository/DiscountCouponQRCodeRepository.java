@@ -22,9 +22,12 @@ public interface DiscountCouponQRCodeRepository extends JpaRepository<DiscountCo
     Optional<DiscountCouponQRCode> findByQrCodeData(String qrCodeData);
 
     // 查詢指定用戶的所有有效QR碼
-    @Query("SELECT q FROM DiscountCouponQRCode q JOIN DiscountCoupon c ON q.couponId = c.id " +
-            "WHERE c.userId = :userId AND q.validUntil > :now AND q.isUsed = false")
-    List<DiscountCouponQRCode> findValidQRCodesByUserId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
+    @Query("SELECT q FROM DiscountCouponQRCode q JOIN DiscountCoupon dc ON q.couponId = dc.id " +
+            "WHERE dc.userId = :userId AND q.validUntil > :now AND q.isUsed = false")
+    List<DiscountCouponQRCode> findValidQRCodesByUserId(
+            @Param("userId") Long userId,
+            @Param("now") LocalDateTime now
+    );
 
     // 查詢即將過期的QR碼(7天內)
     @Query("SELECT qr FROM DiscountCouponQRCode qr " +

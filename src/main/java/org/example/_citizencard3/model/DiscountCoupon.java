@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -19,14 +20,20 @@ public class DiscountCoupon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "user_id", nullable = false)
+
+    @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
 
     @Column(name = "store_id", nullable = false)
     private Long storeId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", insertable = false, updatable = false)
+    private Store store;
 
     @Column(nullable = false, length = 100)
     private String title;
@@ -54,6 +61,9 @@ public class DiscountCoupon {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "discountCoupon", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiscountCouponQRCode> qrCodes;
+
     public enum DiscountType {
         PERCENTAGE,    // 百分比折扣
         FIXED_AMOUNT   // 固定金額折扣
@@ -70,10 +80,29 @@ public class DiscountCoupon {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (status == null) {
+            status = CouponStatus.VALID;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        if (expiryDate != null && expiryDate.isBefore(LocalDateTime.now())) {
+            status = CouponStatus.EXPIRED;
+        }
+    }
+
+    public boolean isValid() {
+        return status == CouponStatus.VALID
+                && expiryDate.isAfter(LocalDateTime.now());
+    }
+
+    public boolean canUse() {
+        return isValid() && !isExpired();
+    }
+
+    public boolean isExpired() {
+        return expiryDate.isBefore(LocalDateTime.now());
     }
 }

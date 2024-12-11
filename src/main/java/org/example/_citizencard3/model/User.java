@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Data
 @Builder
@@ -71,15 +72,20 @@ public class User {
     @Version
     private Integer version;
 
-    // 錢包相關
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Wallet wallet;
-
-    // 添加 getter 和 setter
     @Setter
     @Getter
     @Column(length = 10)
     private String gender;
+
+    // 關聯映射
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Wallet wallet;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MovieTicket> movieTickets;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiscountCoupon> discountCoupons;
 
     // 業務方法
     public void updateLoginInfo(String ip) {
@@ -104,7 +110,47 @@ public class User {
     }
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+        return Collections.singleton(new SimpleGrantedAuthority(this.role.name()));
+    }
+
+    // 錢包相關方法
+    public void initializeWallet() {
+        if (this.wallet == null) {
+            this.wallet = new Wallet();
+            this.wallet.setUser(this);
+            this.wallet.setBalance(0.0);
+        }
+    }
+
+    // 驗證方法
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    public boolean isAccountNonLocked() {
+        return this.active;
+    }
+
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    public boolean isEnabled() {
+        return this.active && this.emailVerified;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (role == null) {
+            role = UserRole.ROLE_USER;
+        }
+        initializeWallet();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
-

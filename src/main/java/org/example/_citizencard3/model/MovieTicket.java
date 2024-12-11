@@ -24,7 +24,7 @@ public class MovieTicket {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -67,5 +67,22 @@ public class MovieTicket {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // 輔助方法
+    public boolean isValid() {
+        return status == TicketStatus.VALID;
+    }
+
+    public boolean isUsed() {
+        return status == TicketStatus.USED;
+    }
+
+    public boolean isExpired() {
+        return status == TicketStatus.EXPIRED;
+    }
+
+    public boolean isCancelled() {
+        return status == TicketStatus.CANCELLED;
     }
 }

@@ -2,15 +2,17 @@ package org.example._citizencard3.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "movie_ticket_qrcodes")
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "movie_ticket_qrcodes")
 public class MovieTicketQRCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,10 +21,10 @@ public class MovieTicketQRCode {
     @Column(name = "ticket_id", nullable = false)
     private Long ticketId;
 
-    @Column(name = "qr_code_data", nullable = false)
+    @Column(name = "qr_code_data", nullable = false, length = 255)
     private String qrCodeData;
 
-    @Column(name = "qr_code_url", nullable = false)
+    @Column(name = "qr_code_url", nullable = false, length = 255)
     private String qrCodeUrl;
 
     @Column(name = "valid_until", nullable = false)
@@ -34,7 +36,7 @@ public class MovieTicketQRCode {
     @Column(name = "used_at")
     private LocalDateTime usedAt;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
@@ -46,12 +48,27 @@ public class MovieTicketQRCode {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // 輔助方法
+    public boolean isValid() {
+        return !isUsed && validUntil.isAfter(LocalDateTime.now());
+    }
+
+    public boolean isExpired() {
+        return validUntil.isBefore(LocalDateTime.now());
+    }
+
+    public void markAsUsed() {
+        this.isUsed = true;
+        this.usedAt = LocalDateTime.now();
     }
 }

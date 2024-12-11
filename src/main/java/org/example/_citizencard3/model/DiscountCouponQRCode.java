@@ -17,7 +17,7 @@ public class DiscountCouponQRCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "coupon_id", nullable = false)
+    @Column(name = "coupon_id", insertable = false, updatable = false)
     private Long couponId;
 
     @Column(name = "qr_code_data", nullable = false)
@@ -42,7 +42,7 @@ public class DiscountCouponQRCode {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coupon_id", insertable = false, updatable = false)
+    @JoinColumn(name = "coupon_id")
     private DiscountCoupon discountCoupon;
 
     @PrePersist
@@ -54,5 +54,19 @@ public class DiscountCouponQRCode {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // 輔助方法
+    public boolean isValid() {
+        return !isUsed && validUntil.isAfter(LocalDateTime.now());
+    }
+
+    public boolean isExpired() {
+        return validUntil.isBefore(LocalDateTime.now());
+    }
+
+    public void markAsUsed() {
+        this.isUsed = true;
+        this.usedAt = LocalDateTime.now();
     }
 }
