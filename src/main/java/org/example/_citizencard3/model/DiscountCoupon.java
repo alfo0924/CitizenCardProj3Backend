@@ -19,7 +19,11 @@ public class DiscountCoupon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
+    @Column(name = "store_id", nullable = false)
+    private Long storeId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

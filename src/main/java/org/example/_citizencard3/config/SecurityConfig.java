@@ -42,7 +42,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**", "/public/**", "/error", "/system/stats").permitAll()
+                        .requestMatchers("/auth/**", "/public/**", "/error", "/system/stats", "/api/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -69,7 +69,8 @@ public class SecurityConfig {
                 "Accept",
                 "Origin",
                 "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
+                "Access-Control-Request-Headers",
+                "X-XSRF-TOKEN"
         ));
         configuration.setExposedHeaders(Arrays.asList(
                 "Access-Control-Allow-Origin",
