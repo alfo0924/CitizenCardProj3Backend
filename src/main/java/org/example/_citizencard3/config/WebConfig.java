@@ -17,21 +17,16 @@ public class WebConfig implements WebMvcConfigurer {
                         "POST",
                         "PUT",
                         "DELETE",
-                        "OPTIONS",
-                        "PATCH"
+                        "OPTIONS"
                 )
                 .allowedHeaders(
                         "Authorization",
                         "Content-Type",
                         "X-Requested-With",
                         "Accept",
-                        "Origin",
-                        "Access-Control-Request-Method",
-                        "Access-Control-Request-Headers"
+                        "Origin"
                 )
                 .exposedHeaders(
-                        "Access-Control-Allow-Origin",
-                        "Access-Control-Allow-Credentials",
                         "Authorization"
                 )
                 .allowCredentials(true)
@@ -40,10 +35,12 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/static/**")
-                .addResourceLocations("classpath:/static/");
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/", "classpath:/public/")
+                .setCachePeriod(3600);
 
-        registry.addResourceHandler("/public/**")
-                .addResourceLocations("classpath:/public/");
+        registry.addResourceHandler("/system/**")
+                .addResourceLocations("classpath:/system/")
+                .setCachePeriod(3600);
     }
 }

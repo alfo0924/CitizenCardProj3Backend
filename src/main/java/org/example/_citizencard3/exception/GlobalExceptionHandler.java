@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -20,7 +21,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 處理驗證錯誤
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(
@@ -34,63 +34,73 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    // 處理自定義業務異常
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<String> handleCustomException(CustomException ex) {
+    public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
         log.error("業務異常：", ex);
-        return ResponseEntity
-                .status(ex.getStatus())
-                .body(ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", ex.getMessage());
+        response.put("status", ex.getStatus().value());
+        return ResponseEntity.status(ex.getStatus()).body(response);
     }
 
-    // 處理認證異常
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ResponseEntity<String> handleBadCredentialsException(BadCredentialsException ex) {
+    public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException ex) {
         log.error("認證失敗：", ex);
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("帳號或密碼錯誤");
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "帳號或密碼錯誤");
+        response.put("status", HttpStatus.UNAUTHORIZED.value());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
-    // 處理權限異常
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(AccessDeniedException ex) {
         log.error("權限不足：", ex);
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body("您沒有權限執行此操作");
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "您沒有權限執行此操作");
+        response.put("status", HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    // 處理實體未找到異常
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException ex) {
+    public ResponseEntity<Map<String, Object>> handleEntityNotFoundException(EntityNotFoundException ex) {
         log.error("實體未找到：", ex);
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", ex.getMessage());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    // 處理約束違反異常
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleConstraintViolationException(
+    public ResponseEntity<Map<String, Object>> handleConstraintViolationException(
             ConstraintViolationException ex) {
         log.error("數據約束違反：", ex);
-        return ResponseEntity
-                .badRequest()
-                .body("數據驗證失敗：" + ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "數據驗證失敗：" + ex.getMessage());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.badRequest().body(response);
     }
 
-    // 處理其他所有異常
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Map<String, Object>> handleNoResourceFoundException(NoResourceFoundException ex) {
+        log.error("資源未找到：", ex);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "請求的資源不存在");
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<String> handleAllUncaughtException(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleAllUncaughtException(Exception ex) {
         log.error("系統異常：", ex);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("系統發生錯誤，請稍後再試");
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "系統發生錯誤，請稍後再試");
+        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
