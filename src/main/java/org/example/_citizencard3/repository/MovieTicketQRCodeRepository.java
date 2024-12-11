@@ -23,11 +23,8 @@ public interface MovieTicketQRCodeRepository extends JpaRepository<MovieTicketQR
 
     // 查詢指定用戶的所有有效QR碼
     @Query("SELECT q FROM MovieTicketQRCode q JOIN MovieTicket t ON q.ticketId = t.id " +
-            "WHERE t.user = :userId AND q.validUntil > :now AND q.isUsed = false")
-    List<MovieTicketQRCode> findValidQRCodesByUserId(
-            @Param("userId") Long userId,
-            @Param("now") LocalDateTime now
-    );
+            "WHERE t.userId = :userId AND q.validUntil > :now AND q.isUsed = false")
+    List<MovieTicketQRCode> findValidQRCodesByUserId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
 
     // 查詢已過期的QR碼
     List<MovieTicketQRCode> findByValidUntilBeforeAndIsUsedFalse(LocalDateTime dateTime);
