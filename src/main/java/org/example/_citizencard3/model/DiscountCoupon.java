@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -24,7 +25,7 @@ public class DiscountCoupon {
     @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
 
-    @Column(name = "store_id", nullable = false)
+    @Column(name = "store_id", insertable = false, updatable = false)
     private Long storeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,7 +33,7 @@ public class DiscountCoupon {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id", insertable = false, updatable = false)
+    @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
     @Column(nullable = false, length = 100)
@@ -55,14 +56,14 @@ public class DiscountCoupon {
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime expiryDate;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "discountCoupon", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DiscountCouponQRCode> qrCodes;
+    private List<DiscountCouponQRCode> qrCodes = new ArrayList<>();
 
     public enum DiscountType {
         PERCENTAGE,    // 百分比折扣
@@ -78,8 +79,9 @@ public class DiscountCoupon {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
         if (status == null) {
             status = CouponStatus.VALID;
         }
@@ -94,8 +96,9 @@ public class DiscountCoupon {
     }
 
     public boolean isValid() {
-        return status == CouponStatus.VALID
-                && expiryDate.isAfter(LocalDateTime.now());
+        return status == CouponStatus.VALID &&
+                expiryDate != null &&
+                expiryDate.isAfter(LocalDateTime.now());
     }
 
     public boolean canUse() {
@@ -103,6 +106,28 @@ public class DiscountCoupon {
     }
 
     public boolean isExpired() {
-        return expiryDate.isBefore(LocalDateTime.now());
+        return expiryDate != null && expiryDate.isBefore(LocalDateTime.now());
+    }
+
+    // 優惠券管理方法
+    public void markAsUsed() {
+        this.status = CouponStatus.USED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void cancel() {
+        this.status = CouponStatus.CANCELLED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // QR碼管理方法
+    public void addQRCode(DiscountCouponQRCode qrCode) {
+        qrCodes.add(qrCode);
+        qrCode.setDiscountCoupon(this);
+    }
+
+    public void removeQRCode(DiscountCouponQRCode qrCode) {
+        qrCodes.remove(qrCode);
+        qrCode.setDiscountCoupon(null);
     }
 }

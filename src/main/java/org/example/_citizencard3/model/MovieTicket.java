@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -42,11 +43,14 @@ public class MovieTicket {
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "movieTicket", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MovieTicketQRCode> qrCodes;
 
     public enum TicketStatus {
         VALID,      // 有效
@@ -57,8 +61,9 @@ public class MovieTicket {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
         if (status == null) {
             status = TicketStatus.VALID;
         }
@@ -84,5 +89,20 @@ public class MovieTicket {
 
     public boolean isCancelled() {
         return status == TicketStatus.CANCELLED;
+    }
+
+    public void markAsUsed() {
+        this.status = TicketStatus.USED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void markAsExpired() {
+        this.status = TicketStatus.EXPIRED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void cancel() {
+        this.status = TicketStatus.CANCELLED;
+        this.updatedAt = LocalDateTime.now();
     }
 }
