@@ -14,7 +14,6 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:8080", "http://localhost:3009"})
 public class AuthController {
 
     private final AuthService authService;
@@ -27,8 +26,12 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-        UserResponse response = authService.register(request);
-        return ResponseEntity.ok(response);
+        try {
+            UserResponse response = authService.register(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/logout")
@@ -50,10 +53,11 @@ public class AuthController {
     }
 
     @GetMapping("/check")
-    public ResponseEntity<Boolean> checkToken(@RequestHeader("Authorization") String token) {
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
+    public ResponseEntity<Boolean> checkToken(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.ok(false);
         }
+        token = token.substring(7);
         boolean isValid = authService.validateToken(token);
         return ResponseEntity.ok(isValid);
     }
