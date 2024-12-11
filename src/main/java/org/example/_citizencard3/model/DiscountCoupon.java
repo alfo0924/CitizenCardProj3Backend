@@ -29,11 +29,11 @@ public class DiscountCoupon {
     private Long storeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id", nullable = false)
+    @JoinColumn(name = "store_id")
     private Store store;
 
     @Column(nullable = false, length = 100)
@@ -109,7 +109,6 @@ public class DiscountCoupon {
         return expiryDate != null && expiryDate.isBefore(LocalDateTime.now());
     }
 
-    // 優惠券管理方法
     public void markAsUsed() {
         this.status = CouponStatus.USED;
         this.updatedAt = LocalDateTime.now();
@@ -120,7 +119,6 @@ public class DiscountCoupon {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // QR碼管理方法
     public void addQRCode(DiscountCouponQRCode qrCode) {
         qrCodes.add(qrCode);
         qrCode.setDiscountCoupon(this);

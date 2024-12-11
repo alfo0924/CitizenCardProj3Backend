@@ -23,8 +23,11 @@ public class Schedule {
 
     @NotNull(message = "電影不能為空")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id", nullable = false)
+    @JoinColumn(name = "movie_id")
     private Movie movie;
+
+    @Column(name = "movie_id", insertable = false, updatable = false)
+    private Long movieId;
 
     @NotNull(message = "放映時間不能為空")
     @Column(nullable = false)
@@ -49,7 +52,7 @@ public class Schedule {
     private Boolean active = true;
 
     @NotNull(message = "創建時間不能為空")
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @NotNull(message = "更新時間不能為空")
@@ -70,17 +73,6 @@ public class Schedule {
 
     public Boolean isActive() {
         return this.active;
-    }
-
-    public Long getMovieId() {
-        return movie != null ? movie.getId() : null;
-    }
-
-    public void setMovieId(@NotNull(message = "電影ID不能為空") Long movieId) {
-        if (this.movie == null) {
-            this.movie = new Movie();
-        }
-        this.movie.setId(movieId);
     }
 
     // 座位相關方法

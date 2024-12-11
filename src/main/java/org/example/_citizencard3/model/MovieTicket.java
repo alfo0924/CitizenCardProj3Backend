@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -22,7 +23,7 @@ public class MovieTicket {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "user_id", insertable = false, updatable = false)
@@ -50,7 +51,7 @@ public class MovieTicket {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "movieTicket", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MovieTicketQRCode> qrCodes;
+    private List<MovieTicketQRCode> qrCodes = new ArrayList<>();
 
     public enum TicketStatus {
         VALID,      // 有效
@@ -76,7 +77,9 @@ public class MovieTicket {
 
     // 輔助方法
     public boolean isValid() {
-        return status == TicketStatus.VALID;
+        return status == TicketStatus.VALID &&
+                schedule != null &&
+                !schedule.isExpired();
     }
 
     public boolean isUsed() {
@@ -84,7 +87,8 @@ public class MovieTicket {
     }
 
     public boolean isExpired() {
-        return status == TicketStatus.EXPIRED;
+        return status == TicketStatus.EXPIRED ||
+                (schedule != null && schedule.isExpired());
     }
 
     public boolean isCancelled() {
@@ -92,17 +96,37 @@ public class MovieTicket {
     }
 
     public void markAsUsed() {
+        if (!isValid()) {
+            throw new IllegalStateException("票券無效，無法標記為已使用");
+        }
         this.status = TicketStatus.USED;
         this.updatedAt = LocalDateTime.now();
     }
 
     public void markAsExpired() {
+        if (isUsed() || isCancelled()) {
+            throw new IllegalStateException("票券狀態不允許標記為過期");
+        }
         this.status = TicketStatus.EXPIRED;
         this.updatedAt = LocalDateTime.now();
     }
 
     public void cancel() {
+        if (isUsed() || isExpired()) {
+            throw new IllegalStateException("票券狀態不允許取消");
+        }
         this.status = TicketStatus.CANCELLED;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // QR碼管理
+    public void addQRCode(MovieTicketQRCode qrCode) {
+        qrCodes.add(qrCode);
+        qrCode.setMovieTicket(this);
+    }
+
+    public void removeQRCode(MovieTicketQRCode qrCode) {
+        qrCodes.remove(qrCode);
+        qrCode.setMovieTicket(null);
     }
 }
