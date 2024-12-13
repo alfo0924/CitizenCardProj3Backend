@@ -17,16 +17,21 @@ public class WebConfig implements WebMvcConfigurer {
                         "POST",
                         "PUT",
                         "DELETE",
-                        "OPTIONS"
+                        "OPTIONS",
+                        "PATCH"
                 )
                 .allowedHeaders(
                         "Authorization",
                         "Content-Type",
                         "X-Requested-With",
                         "Accept",
-                        "Origin"
+                        "Origin",
+                        "Access-Control-Request-Method",
+                        "Access-Control-Request-Headers"
                 )
                 .exposedHeaders(
+                        "Access-Control-Allow-Origin",
+                        "Access-Control-Allow-Credentials",
                         "Authorization"
                 )
                 .allowCredentials(true)
@@ -35,12 +40,22 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/", "classpath:/public/")
+        // 靜態資源處理
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(3600);
+
+        registry.addResourceHandler("/public/**")
+                .addResourceLocations("classpath:/public/")
                 .setCachePeriod(3600);
 
         registry.addResourceHandler("/system/**")
                 .addResourceLocations("classpath:/system/")
+                .setCachePeriod(3600);
+
+        // 添加Swagger UI資源映射
+        registry.addResourceHandler("/swagger-ui/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/")
                 .setCachePeriod(3600);
     }
 }
