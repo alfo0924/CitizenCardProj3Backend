@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 @NoArgsConstructor
@@ -34,9 +35,11 @@ public class RegisterRequest {
     )
     private String phone;
 
-    @Past(message = "生日必須是過去的日期")
+    @NotNull(message = "生日不能為空")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private String birthday;
 
+    @NotNull(message = "性別不能為空")
     @Pattern(
             regexp = "^(MALE|FEMALE|OTHER)$",
             message = "性別必須是 MALE、FEMALE 或 OTHER"
