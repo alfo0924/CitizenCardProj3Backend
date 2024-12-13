@@ -17,45 +17,42 @@ public class WebConfig implements WebMvcConfigurer {
                         "POST",
                         "PUT",
                         "DELETE",
-                        "OPTIONS",
-                        "PATCH"
+                        "OPTIONS"
                 )
                 .allowedHeaders(
                         "Authorization",
                         "Content-Type",
                         "X-Requested-With",
                         "Accept",
-                        "Origin",
-                        "Access-Control-Request-Method",
-                        "Access-Control-Request-Headers"
+                        "Origin"
                 )
                 .exposedHeaders(
-                        "Access-Control-Allow-Origin",
-                        "Access-Control-Allow-Credentials",
                         "Authorization"
                 )
-                .allowCredentials(true)
+                .allowCredentials(false)
                 .maxAge(3600L);
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 靜態資源處理
-        registry.addResourceHandler("/static/**")
-                .addResourceLocations("classpath:/static/")
+        registry.addResourceHandler("/**")
+                .addResourceLocations(
+                        "classpath:/static/",
+                        "classpath:/public/",
+                        "classpath:/resources/"
+                )
                 .setCachePeriod(3600);
 
-        registry.addResourceHandler("/public/**")
-                .addResourceLocations("classpath:/public/")
-                .setCachePeriod(3600);
-
-        registry.addResourceHandler("/system/**")
-                .addResourceLocations("classpath:/system/")
-                .setCachePeriod(3600);
-
-        // 添加Swagger UI資源映射
+        // API文檔資源
         registry.addResourceHandler("/swagger-ui/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/")
                 .setCachePeriod(3600);
+
+        // 系統資源
+        registry.addResourceHandler("/system/**")
+                .addResourceLocations("classpath:/system/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
     }
 }
