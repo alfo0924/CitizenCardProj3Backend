@@ -25,22 +25,26 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
     @Column(length = 20)
     private String phone;
 
+    @Column(length = 10)
     private String birthday;
 
+    @Column(length = 10)
+    private String gender;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private UserRole role = UserRole.ROLE_USER;
 
     @Column(length = 500)
@@ -58,7 +62,7 @@ public class User {
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
 
-    @Column(name = "last_login_ip")
+    @Column(name = "last_login_ip", length = 50)
     private String lastLoginIp;
 
     @CreationTimestamp
@@ -66,16 +70,18 @@ public class User {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Version
-    private Integer version;
+    private Integer version = 0;
 
-    @Setter
-    @Getter
-    @Column(length = 10)
-    private String gender;
+    // 重置密碼相關欄位 - 使用現有欄位的額外功能
+    @Transient
+    private String resetToken;
+
+    @Transient
+    private LocalDateTime resetTokenExpiry;
 
     // 關聯映射
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -111,6 +117,23 @@ public class User {
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(new SimpleGrantedAuthority(this.role.name()));
+    }
+
+    // 重置密碼相關方法
+    public void setResetToken(String token) {
+        this.resetToken = token;
+    }
+
+    public void setResetTokenExpiry(LocalDateTime expiry) {
+        this.resetTokenExpiry = expiry;
+    }
+
+    public String getResetToken() {
+        return this.resetToken;
+    }
+
+    public LocalDateTime getResetTokenExpiry() {
+        return this.resetTokenExpiry;
     }
 
     // 錢包相關方法

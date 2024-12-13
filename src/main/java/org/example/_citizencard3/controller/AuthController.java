@@ -8,16 +8,15 @@ import org.example._citizencard3.dto.response.LoginResponse;
 import org.example._citizencard3.dto.response.UserResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.service.AuthService;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,18 +34,28 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         try {
+            log.info("Attempting login for user: {}", request.getEmail());
             LoginResponse response = authService.login(request);
+            log.info("Login successful for user: {}", request.getEmail());
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             log.error("Login failed for user: {}", request.getEmail());
-            throw new CustomException("Invalid email or password", HttpStatus.UNAUTHORIZED);
+            throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
         }
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
+            log.info("Processing registration for user: {}", request.getEmail());
+            request.setCreatedAt(LocalDateTime.now());
+            request.setUpdatedAt(LocalDateTime.now());
+            request.setVersion(0);
+            request.setActive(true);
+            request.setEmailVerified(false);
+
             UserResponse response = authService.register(request);
+            log.info("Registration successful for user: {}", request.getEmail());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (CustomException e) {
             log.error("Registration failed: {}", e.getMessage());
@@ -55,26 +64,30 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(@RequestHeader(value = "Authorization", required = false) String token) {
+    public ResponseEntity<Map<String, String>> logout(
+            @RequestHeader(value = "Authorization", required = false) String token) {
         try {
+            log.info("Processing logout request");
             if (token != null && token.startsWith("Bearer ")) {
                 String jwtToken = token.substring(7);
                 authService.logout(jwtToken);
             }
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Successfully logged out");
+            response.put("message", "登出成功");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Logout failed: {}", e.getMessage());
-            throw new CustomException("Logout failed", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new CustomException("登出失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserResponse> getProfile(@RequestHeader(value = "Authorization", required = false) String token) {
+    public ResponseEntity<UserResponse> getProfile(
+            @RequestHeader(value = "Authorization", required = false) String token) {
         try {
+            log.info("Fetching user profile");
             if (token == null || !token.startsWith("Bearer ")) {
-                throw new CustomException("Invalid token format", HttpStatus.UNAUTHORIZED);
+                throw new CustomException("無效的認證令牌", HttpStatus.UNAUTHORIZED);
             }
             String jwtToken = token.substring(7);
             UserResponse response = authService.getProfile(jwtToken);
@@ -90,6 +103,7 @@ public class AuthController {
             @RequestHeader(value = "Authorization", required = false) String token) {
         Map<String, Object> response = new HashMap<>();
         try {
+            log.info("Checking token validity");
             if (token == null || !token.startsWith("Bearer ")) {
                 response.put("valid", false);
                 return ResponseEntity.ok(response);
@@ -112,12 +126,13 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> validateEmail(@RequestParam String email) {
         Map<String, Object> response = new HashMap<>();
         try {
-            boolean isAvailable = authService.isEmailAvailable(email);
+            log.info("Validating email: {}", email);
+            boolean isAvailable = authService.isEmailAvailable(email.toLowerCase().trim());
             response.put("available", isAvailable);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Email validation failed: {}", e.getMessage());
-            throw new CustomException("Email validation failed", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new CustomException("電子郵件驗證失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -147,7 +162,7 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
         log.error("Unexpected error occurred: ", ex);
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "An unexpected error occurred");
+        response.put("message", "系統發生未預期的錯誤");
         response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }

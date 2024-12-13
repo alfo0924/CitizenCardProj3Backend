@@ -1,5 +1,6 @@
 package org.example._citizencard3.service;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example._citizencard3.dto.request.LoginRequest;
 import org.example._citizencard3.dto.request.RegisterRequest;
@@ -34,10 +35,8 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
-    private static final Pattern PHONE_PATTERN =
-            Pattern.compile("^09\\d{8}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^09\\d{8}$");
     private static final Pattern PASSWORD_PATTERN =
             Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$");
 
@@ -53,41 +52,6 @@ public class AuthService {
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
     }
-
-    @Transactional
-    public LoginResponse login(LoginRequest request) {
-        try {
-            validateLoginRequest(request);
-
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail().toLowerCase().trim(),
-                            request.getPassword()
-                    )
-            );
-
-            User user = userRepository.findByEmail(request.getEmail().toLowerCase().trim())
-                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
-
-            if (!user.isActive()) {
-                throw new CustomException("帳戶已被停用", HttpStatus.FORBIDDEN);
-            }
-
-            String token = jwtTokenProvider.generateToken(authentication);
-            String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
-
-            user.setLastLoginTime(LocalDateTime.now());
-            user = userRepository.save(user);
-
-            return buildLoginResponse(user, token, refreshToken);
-        } catch (BadCredentialsException e) {
-            throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
-        } catch (Exception e) {
-            log.error("登入失敗", e);
-            throw new CustomException("登入處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     @Transactional
     public UserResponse register(RegisterRequest request) {
         try {
@@ -103,46 +67,27 @@ public class AuthService {
 
             LocalDateTime now = LocalDateTime.now();
             User user = createUserFromRequest(request, now);
-            Wallet wallet = createWalletForUser(user, now);
+
+            // 創建並關聯錢包
+            Wallet wallet = Wallet.builder()
+                    .user(user)
+                    .balance(0.0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
             user.setWallet(wallet);
 
+            // 保存用戶和錢包
             user = userRepository.save(user);
             log.info("新用戶註冊成功: {}", user.getEmail());
 
             return buildUserResponse(user);
         } catch (CustomException e) {
+            log.error("註冊失敗: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("註冊失敗", e);
+            log.error("註冊處理失敗", e);
             throw new CustomException("註冊處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private void validateRegistrationRequest(RegisterRequest request) {
-        if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
-            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
-        }
-
-        if (!StringUtils.hasText(request.getPassword()) || !PASSWORD_PATTERN.matcher(request.getPassword()).matches()) {
-            throw new CustomException("密碼必須包含大小寫字母、數字和特殊字符，且長度至少為8位", HttpStatus.BAD_REQUEST);
-        }
-
-        if (StringUtils.hasText(request.getPhone()) && !PHONE_PATTERN.matcher(request.getPhone()).matches()) {
-            throw new CustomException("無效的手機號碼格式", HttpStatus.BAD_REQUEST);
-        }
-
-        if (!StringUtils.hasText(request.getName()) || request.getName().length() < 2) {
-            throw new CustomException("姓名長度必須至少為2個字符", HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    private void validateLoginRequest(LoginRequest request) {
-        if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
-            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
-        }
-
-        if (!StringUtils.hasText(request.getPassword())) {
-            throw new CustomException("密碼不能為空", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -166,15 +111,128 @@ public class AuthService {
                 .build();
     }
 
-    private Wallet createWalletForUser(User user, LocalDateTime now) {
-        return Wallet.builder()
-                .user(user)
-                .balance(0.0)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+    private void validateRegistrationRequest(RegisterRequest request) {
+        if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
+            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!StringUtils.hasText(request.getPassword()) || !PASSWORD_PATTERN.matcher(request.getPassword()).matches()) {
+            throw new CustomException("密碼必須包含大小寫字母、數字和特殊字符，且長度至少為8位", HttpStatus.BAD_REQUEST);
+        }
+
+        if (StringUtils.hasText(request.getPhone()) && !PHONE_PATTERN.matcher(request.getPhone()).matches()) {
+            throw new CustomException("無效的手機號碼格式", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!StringUtils.hasText(request.getName()) || request.getName().length() < 2) {
+            throw new CustomException("姓名長度必須至少為2個字符", HttpStatus.BAD_REQUEST);
+        }
+
+        if (request.getBirthday() == null) {
+            throw new CustomException("生日不能為空", HttpStatus.BAD_REQUEST);
+        }
+
+        if (request.getGender() == null) {
+            throw new CustomException("性別不能為空", HttpStatus.BAD_REQUEST);
+        }
     }
 
+
+
+    @Transactional
+    public void verifyEmail(String token) {
+        try {
+            if (!StringUtils.hasText(token)) {
+                throw new CustomException("驗證令牌不能為空", HttpStatus.BAD_REQUEST);
+            }
+
+            String email = jwtTokenProvider.getEmailFromToken(token);
+            User user = userRepository.findUnverifiedUserByEmail(email)
+                    .orElseThrow(() -> new CustomException("找不到未驗證的用戶", HttpStatus.NOT_FOUND));
+
+            user.setEmailVerified(true);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            log.info("用戶 {} 電子郵件驗證成功", email);
+        } catch (Exception e) {
+            log.error("電子郵件驗證失敗", e);
+            throw new CustomException("電子郵件驗證失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional
+    public void updatePassword(String email, String oldPassword, String newPassword) {
+        try {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                throw new CustomException("原密碼錯誤", HttpStatus.BAD_REQUEST);
+            }
+
+            if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
+                throw new CustomException("新密碼格式無效", HttpStatus.BAD_REQUEST);
+            }
+
+            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            log.info("用戶 {} 密碼更新成功", email);
+        } catch (Exception e) {
+            log.error("密碼更新失敗", e);
+            throw new CustomException("密碼更新失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @Transactional
+    public LoginResponse refreshToken(String refreshToken) {
+        try {
+            if (!jwtTokenProvider.validateToken(refreshToken)) {
+                throw new CustomException("無效的更新令牌", HttpStatus.UNAUTHORIZED);
+            }
+
+            String email = jwtTokenProvider.getEmailFromToken(refreshToken);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    user.getEmail(),
+                    null,
+                    user.getAuthorities()
+            );
+
+            String newToken = jwtTokenProvider.generateToken(authentication);
+            String newRefreshToken = jwtTokenProvider.generateRefreshToken(authentication);
+
+            return buildLoginResponse(user, newToken, newRefreshToken);
+        } catch (Exception e) {
+            log.error("Token更新失敗", e);
+            throw new CustomException("Token更新失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        try {
+            User user = userRepository.findByEmail(email.toLowerCase().trim())
+                    .orElseThrow(() -> new CustomException("找不到使用者", HttpStatus.NOT_FOUND));
+
+            String resetToken = jwtTokenProvider.generateToken(
+                    new UsernamePasswordAuthenticationToken(email, null, user.getAuthorities())
+            );
+
+            // 使用lastLoginTime來追蹤重置請求時間
+            user.setLastLoginTime(LocalDateTime.now());
+            userRepository.save(user);
+
+            // TODO: 實作發送重置密碼郵件的邏輯
+            log.info("密碼重置郵件已發送至: {}", email);
+        } catch (Exception e) {
+            log.error("密碼重置請求失敗", e);
+            throw new CustomException("密碼重置請求失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     private LoginResponse buildLoginResponse(User user, String token, String refreshToken) {
         return LoginResponse.builder()
                 .token(token)
@@ -208,11 +266,73 @@ public class AuthService {
                 .build();
     }
 
+    private void validateLoginRequest(LoginRequest request) {
+        if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
+            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
+        }
+        if (!StringUtils.hasText(request.getPassword())) {
+            throw new CustomException("密碼不能為空", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public boolean isEmailAvailable(String email) {
+        if (!StringUtils.hasText(email) || !EMAIL_PATTERN.matcher(email).matches()) {
+            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
+        }
+        return !userRepository.existsByEmail(email.toLowerCase().trim());
+    }
+
     @Transactional
-    public void logout(String token) {
-        if (token != null) {
+    public void updateLastLoginTime(String email) {
+        try {
+            userRepository.updateLastLoginTime(email, LocalDateTime.now());
+            log.info("更新用戶 {} 最後登入時間成功", email);
+        } catch (Exception e) {
+            log.error("更新最後登入時間失敗", e);
+            throw new CustomException("更新登入時間失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @Transactional
+    public LoginResponse login(@Valid LoginRequest request) {
+        try {
+            validateLoginRequest(request);
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail().toLowerCase().trim(),
+                            request.getPassword()
+                    )
+            );
+
+            User user = userRepository.findByEmail(request.getEmail().toLowerCase().trim())
+                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+
+            if (!user.isActive()) {
+                throw new CustomException("帳戶已被停用", HttpStatus.FORBIDDEN);
+            }
+
+            String token = jwtTokenProvider.generateToken(authentication);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
+
+            user.setLastLoginTime(LocalDateTime.now());
+            userRepository.save(user);
+
+            return buildLoginResponse(user, token, refreshToken);
+        } catch (BadCredentialsException e) {
+            throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error("登入失敗", e);
+            throw new CustomException("登入處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional
+    public void logout(String jwtToken) {
+        if (jwtToken != null) {
             try {
-                jwtTokenProvider.invalidateToken(token);
+                jwtTokenProvider.invalidateToken(jwtToken);
+                log.info("用戶登出成功");
             } catch (Exception e) {
                 log.error("登出處理失敗", e);
                 throw new CustomException("登出處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -220,9 +340,9 @@ public class AuthService {
         }
     }
 
-    public UserResponse getProfile(String token) {
+    public UserResponse getProfile(String jwtToken) {
         try {
-            String email = jwtTokenProvider.getEmailFromToken(token);
+            String email = jwtTokenProvider.getEmailFromToken(jwtToken);
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
             return buildUserResponse(user);
@@ -232,19 +352,12 @@ public class AuthService {
         }
     }
 
-    public boolean validateToken(String token) {
+    public boolean validateToken(String jwtToken) {
         try {
-            return jwtTokenProvider.validateToken(token);
+            return jwtTokenProvider.validateToken(jwtToken);
         } catch (Exception e) {
             log.error("Token驗證失敗", e);
             return false;
         }
-    }
-
-    public boolean isEmailAvailable(String email) {
-        if (!StringUtils.hasText(email) || !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
-        }
-        return !userRepository.existsByEmail(email.toLowerCase().trim());
     }
 }
