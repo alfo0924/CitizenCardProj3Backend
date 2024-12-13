@@ -42,44 +42,40 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
+                        // 公開端點
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/public/**", "/error").permitAll()
-                        .requestMatchers("/system/health", "/system/info").permitAll()
+                        .requestMatchers("/system/**").permitAll()
 
-                        // Swagger/OpenAPI endpoints
+                        // Swagger文檔
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Public GET endpoints
-                        .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
+                        // 公開GET端點
+                        .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**", "/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/discounts/public/**").permitAll()
 
-                        // Admin endpoints
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/management/**").hasRole("ADMIN")
+                        // 管理員端點
+                        .requestMatchers("/admin/**", "/management/**").hasRole("ADMIN")
 
-                        // User endpoints requiring authentication
-                        .requestMatchers("/wallet/**").authenticated()
-                        .requestMatchers("/user/**").authenticated()
-                        .requestMatchers("/bookings/**").authenticated()
+                        // 需要認證的用戶端點
+                        .requestMatchers("/wallet/**", "/user/**", "/bookings/**").authenticated()
+                        .requestMatchers("/movie-tickets/**", "/discount-coupons/**").authenticated()
 
-                        // Default policy
+                        // 預設策略
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\"未授權訪問\",\"message\":\"請先登入\"}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(403);
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"error\": \"Access Denied\"}");
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\"訪問被拒絕\",\"message\":\"權限不足\"}");
                         })
                 );
 

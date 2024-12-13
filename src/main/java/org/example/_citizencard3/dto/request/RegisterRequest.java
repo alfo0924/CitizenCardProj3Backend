@@ -1,10 +1,7 @@
 package org.example._citizencard3.dto.request;
 
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
@@ -67,6 +64,15 @@ public class RegisterRequest {
 
     private LocalDateTime updatedAt;
 
+    @Setter
+    private String lastLoginIp;
+
+    @Setter
+    private LocalDateTime lastLoginTime;
+
+    @Size(max = 200, message = "頭像URL長度不能超過200個字元")
+    private String avatar;
+
     @AssertTrue(message = "密碼與確認密碼不一致")
     private boolean isPasswordMatch() {
         return password == null || confirmPassword == null
@@ -83,4 +89,5 @@ public class RegisterRequest {
             return false;
         }
     }
+
 }

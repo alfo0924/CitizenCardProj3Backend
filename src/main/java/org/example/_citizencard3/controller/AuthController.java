@@ -48,11 +48,17 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
             log.info("Processing registration for user: {}", request.getEmail());
-            request.setCreatedAt(LocalDateTime.now());
-            request.setUpdatedAt(LocalDateTime.now());
+
+            // 設置初始值，符合資料庫欄位
+            LocalDateTime now = LocalDateTime.now();
+            request.setCreatedAt(now);
+            request.setUpdatedAt(now);
             request.setVersion(0);
             request.setActive(true);
             request.setEmailVerified(false);
+            request.setRole("ROLE_USER");
+            request.setLastLoginTime(now);
+            request.setLastLoginIp("0.0.0.0");
 
             UserResponse response = authService.register(request);
             log.info("Registration successful for user: {}", request.getEmail());
