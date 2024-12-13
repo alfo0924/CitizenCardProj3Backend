@@ -44,23 +44,28 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 公開端點
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/validate-email").permitAll()
                         .requestMatchers("/public/**", "/error").permitAll()
-                        .requestMatchers("/system/**").permitAll()
+                        .requestMatchers("/system/health", "/system/info").permitAll()
 
                         // Swagger文檔
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // 公開GET端點
-                        .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**", "/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/discounts/public/**").permitAll()
 
                         // 管理員端點
                         .requestMatchers("/admin/**", "/management/**").hasRole("ADMIN")
 
                         // 需要認證的用戶端點
-                        .requestMatchers("/wallet/**", "/user/**", "/bookings/**").authenticated()
-                        .requestMatchers("/movie-tickets/**", "/discount-coupons/**").authenticated()
+                        .requestMatchers("/wallet/**").authenticated()
+                        .requestMatchers("/user/**").authenticated()
+                        .requestMatchers("/bookings/**").authenticated()
+                        .requestMatchers("/movie-tickets/**").authenticated()
+                        .requestMatchers("/discount-coupons/**").authenticated()
 
                         // 預設策略
                         .anyRequest().authenticated()

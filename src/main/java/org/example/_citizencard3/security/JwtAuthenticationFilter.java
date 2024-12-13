@@ -27,18 +27,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     private final List<String> PUBLIC_PATHS = Arrays.asList(
-            "/api/auth/**",
-            "/api/public/**",
+            "/auth/**",
+            "/public/**",
             "/error",
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/system/**"
     );
 
     private final List<String> PUBLIC_GET_PATHS = Arrays.asList(
-            "/api/movies/**",
-            "/api/stores/**",
-            "/api/schedules/**",
-            "/api/discounts/public/**"
+            "/movies/**",
+            "/stores/**",
+            "/schedules/**",
+            "/discounts/public/**"
     );
 
     @Override
@@ -48,17 +49,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         try {
+            String path = request.getRequestURI();
+            log.debug("Processing request for path: {}", path);
+
             // 檢查是否為公開路徑
             if (isPublicPath(request)) {
+                log.debug("Public path accessed: {}", path);
                 filterChain.doFilter(request, response);
                 return;
             }
 
             String jwt = getJwtFromRequest(request);
-
-            // 處理認證邏輯
             handleAuthentication(request, jwt);
-
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
@@ -82,6 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("User authenticated successfully: {}", email);
                 }
             } catch (Exception e) {
                 log.error("無法設置用戶認證: {}", e.getMessage());
@@ -114,14 +117,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
+        // 允許所有OPTIONS請求
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
+
+        // 移除context path以進行比對
+        String contextPath = request.getContextPath();
+        if (StringUtils.hasText(contextPath) && path.startsWith(contextPath)) {
+            path = path.substring(contextPath.length());
+        }
+
         // 檢查基本公開路徑
+        String finalPath1 = path;
         boolean isPublic = PUBLIC_PATHS.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
+                .anyMatch(pattern -> pathMatcher.match(pattern, finalPath1));
 
         // 檢查GET請求的特殊公開路徑
         if (!isPublic && "GET".equalsIgnoreCase(method)) {
+            String finalPath = path;
             isPublic = PUBLIC_GET_PATHS.stream()
-                    .anyMatch(pattern -> pathMatcher.match(pattern, path));
+                    .anyMatch(pattern -> pathMatcher.match(pattern, finalPath));
         }
 
         if (isPublic) {

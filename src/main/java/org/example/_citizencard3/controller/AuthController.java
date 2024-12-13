@@ -49,8 +49,11 @@ public class AuthController {
         try {
             log.info("Processing registration for user: {}", request.getEmail());
 
-            // 設置初始值，符合資料庫欄位
+            // 初始化用戶數據
             LocalDateTime now = LocalDateTime.now();
+            request.setEmail(request.getEmail().toLowerCase().trim());
+            request.setName(request.getName().trim());
+            request.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
             request.setCreatedAt(now);
             request.setUpdatedAt(now);
             request.setVersion(0);
@@ -59,6 +62,12 @@ public class AuthController {
             request.setRole("ROLE_USER");
             request.setLastLoginTime(now);
             request.setLastLoginIp("0.0.0.0");
+            request.setAvatar("/avatars/default-avatar.jpg");
+
+            // 驗證密碼
+            if (!request.getPassword().equals(request.getConfirmPassword())) {
+                throw new CustomException("密碼與確認密碼不一致", HttpStatus.BAD_REQUEST);
+            }
 
             UserResponse response = authService.register(request);
             log.info("Registration successful for user: {}", request.getEmail());
