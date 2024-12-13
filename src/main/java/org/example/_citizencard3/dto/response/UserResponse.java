@@ -22,6 +22,7 @@ public class UserResponse {
     private String address;
     private String role;
     private String avatar;
+    private boolean emailVerified;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

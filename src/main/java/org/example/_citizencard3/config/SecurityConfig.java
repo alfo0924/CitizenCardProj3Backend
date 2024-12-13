@@ -23,6 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -41,16 +42,46 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**", "/public/**", "/error", "/system/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**").permitAll()
+                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/public/**", "/error").permitAll()
+                        .requestMatchers("/system/health", "/system/info").permitAll()
+
+                        // Swagger/OpenAPI endpoints
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // Public GET endpoints
+                        .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
+
+                        // Admin endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/management/**").hasRole("ADMIN")
+
+                        // User endpoints requiring authentication
                         .requestMatchers("/wallet/**").authenticated()
+                        .requestMatchers("/user/**").authenticated()
+                        .requestMatchers("/bookings/**").authenticated()
+
+                        // Default policy
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
+                        UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Access Denied\"}");
+                        })
+                );
 
         return http.build();
     }
@@ -58,21 +89,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3009"));
+        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3009"));
         configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
                 "X-Requested-With",
                 "Accept",
-                "Origin"
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
         ));
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization"
-        ));
-        configuration.setAllowCredentials(false);
+        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -82,7 +113,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean

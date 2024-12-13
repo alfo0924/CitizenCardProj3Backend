@@ -10,10 +10,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -21,6 +24,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    private final List<String> PUBLIC_PATHS = Arrays.asList(
+            "/api/auth/**",
+            "/api/public/**",
+            "/error",
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
+    );
+
+    private final List<String> PUBLIC_GET_PATHS = Arrays.asList(
+            "/api/movies/**",
+            "/api/stores/**",
+            "/api/schedules/**",
+            "/api/discounts/public/**"
+    );
 
     @Override
     protected void doFilterInternal(
@@ -37,34 +56,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String jwt = getJwtFromRequest(request);
 
-            // 如果沒有token且不是公開路徑，直接放行給後續的過濾器處理
-            if (!StringUtils.hasText(jwt)) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            // 驗證token並設置認證信息
-            if (jwtTokenProvider.validateToken(jwt)) {
-                String email = jwtTokenProvider.getEmailFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+            // 處理認證邏輯
+            handleAuthentication(request, jwt);
 
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            log.error("JWT認證處理失敗: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            handleAuthenticationError(response, e);
+        }
+    }
+
+    private void handleAuthentication(HttpServletRequest request, String jwt) {
+        if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+            try {
+                String email = jwtTokenProvider.getEmailFromToken(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                if (userDetails != null && userDetails.isEnabled()) {
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (Exception e) {
+                log.error("無法設置用戶認證: {}", e.getMessage());
+                SecurityContextHolder.clearContext();
+            }
+        }
+    }
+
+    private void handleAuthenticationError(HttpServletResponse response, Exception e) {
+        log.error("JWT認證處理失敗: {}", e.getMessage());
+        SecurityContextHolder.clearContext();
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            response.getWriter().write("{\"error\":\"認證失敗\",\"message\":\"" + e.getMessage() + "\"}");
+        } catch (IOException ex) {
+            log.error("寫入錯誤響應失敗", ex);
         }
     }
 
@@ -80,21 +114,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        // 基本公開路徑
-        if (path.startsWith("/api/auth/") ||
-                path.startsWith("/api/public/") ||
-                path.equals("/error") ||
-                path.startsWith("/swagger-ui/") ||
-                path.startsWith("/v3/api-docs/")) {
-            return true;
+        // 檢查基本公開路徑
+        boolean isPublic = PUBLIC_PATHS.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, path));
+
+        // 檢查GET請求的特殊公開路徑
+        if (!isPublic && "GET".equalsIgnoreCase(method)) {
+            isPublic = PUBLIC_GET_PATHS.stream()
+                    .anyMatch(pattern -> pathMatcher.match(pattern, path));
         }
 
-        // GET請求的特殊公開路徑
-        if ("GET".equalsIgnoreCase(method)) {
-            return path.startsWith("/api/movies") ||
-                    path.startsWith("/api/stores");
+        if (isPublic) {
+            log.debug("公開訪問路徑: {}", path);
         }
 
-        return false;
+        return isPublic;
     }
 }
