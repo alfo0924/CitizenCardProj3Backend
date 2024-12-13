@@ -17,31 +17,36 @@ public class WebConfig implements WebMvcConfigurer {
                         "POST",
                         "PUT",
                         "DELETE",
-                        "OPTIONS"
+                        "OPTIONS",
+                        "PATCH"
                 )
                 .allowedHeaders(
                         "Authorization",
                         "Content-Type",
                         "X-Requested-With",
                         "Accept",
-                        "Origin"
+                        "Origin",
+                        "Access-Control-Request-Method",
+                        "Access-Control-Request-Headers"
                 )
                 .exposedHeaders(
+                        "Access-Control-Allow-Origin",
+                        "Access-Control-Allow-Credentials",
                         "Authorization"
                 )
-                .allowCredentials(false)
+                .allowCredentials(true)
                 .maxAge(3600L);
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 靜態資源處理
-        registry.addResourceHandler("/**")
-                .addResourceLocations(
-                        "classpath:/static/",
-                        "classpath:/public/",
-                        "classpath:/resources/"
-                )
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(3600);
+
+        registry.addResourceHandler("/public/**")
+                .addResourceLocations("classpath:/public/")
                 .setCachePeriod(3600);
 
         // API文檔資源
