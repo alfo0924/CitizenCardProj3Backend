@@ -17,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,26 +52,25 @@ public class AuthService {
         try {
             validateLoginRequest(request);
 
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail().toLowerCase().trim(), request.getPassword())
-            );
-
-            User user = userRepository.findByEmail(request.getEmail().toLowerCase().trim())
-                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+            User user = checkUserExistence(request.getEmail());
 
             if (!user.isActive()) {
                 throw new CustomException("帳戶已被停用", HttpStatus.FORBIDDEN);
             }
 
+            Authentication authentication = authenticateUser(request.getEmail(), request.getPassword());
+
             String token = jwtTokenProvider.generateToken(authentication);
 
-            user.setLastLoginTime(LocalDateTime.now());
-            user.setLastLoginIp(request.getLastLoginIp());
-            userRepository.save(user);
+            updateUserLoginInfo(user, request.getLastLoginIp());
 
             return buildLoginResponse(user, token);
         } catch (BadCredentialsException e) {
-            throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
+            throw new CustomException("密碼錯誤", HttpStatus.UNAUTHORIZED);
+        } catch (UsernameNotFoundException e) {
+            throw new CustomException("用戶不存在", HttpStatus.NOT_FOUND);
+        } catch (CustomException e) {
+            throw e;
         } catch (Exception e) {
             log.error("登入失敗", e);
             throw new CustomException("登入處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -86,30 +86,7 @@ public class AuthService {
                 throw new CustomException("此電子郵件已被註冊", HttpStatus.CONFLICT);
             }
 
-            LocalDateTime now = LocalDateTime.now();
-            User user = new User();
-            user.setName(request.getName().trim());
-            user.setEmail(request.getEmail().toLowerCase().trim());
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-            user.setPhone(request.getPhone());
-            user.setBirthday(request.getBirthday());
-            user.setGender(request.getGender());
-            user.setRole("ROLE_USER");
-            user.setActive(true);
-            user.setEmailVerified(false);
-            user.setLastLoginTime(now);
-            user.setLastLoginIp("0.0.0.0");
-            user.setCreatedAt(now);
-            user.setUpdatedAt(now);
-            user.setVersion(0);
-
-            Wallet wallet = new Wallet();
-            wallet.setUser(user);
-            wallet.setBalance(0.0);
-            wallet.setCreatedAt(now);
-            wallet.setUpdatedAt(now);
-            user.setWallet(wallet);
-
+            User user = createNewUser(request);
             user = userRepository.save(user);
             log.info("新用戶註冊成功: {}", user.getEmail());
 
@@ -139,8 +116,7 @@ public class AuthService {
     public UserResponse getProfile(String token) {
         try {
             String email = jwtTokenProvider.getEmailFromToken(token);
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+            User user = checkUserExistence(email);
             return buildUserResponse(user);
         } catch (Exception e) {
             log.error("獲取用戶資料失敗", e);
@@ -154,8 +130,7 @@ public class AuthService {
                 return false;
             }
             String email = jwtTokenProvider.getEmailFromToken(token);
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+            User user = checkUserExistence(email);
             return user.isActive() && jwtTokenProvider.validateToken(token);
         } catch (Exception e) {
             log.error("Token驗證失敗", e);
@@ -183,8 +158,8 @@ public class AuthService {
         if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
             throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
         }
-        if (!StringUtils.hasText(request.getPassword())) {
-            throw new CustomException("密碼不能為空", HttpStatus.BAD_REQUEST);
+        if (!StringUtils.hasText(request.getPassword()) || request.getPassword().length() < 8) {
+            throw new CustomException("密碼長度必須至少為8個字符", HttpStatus.BAD_REQUEST);
         }
         if (StringUtils.hasText(request.getPhone()) && !PHONE_PATTERN.matcher(request.getPhone()).matches()) {
             throw new CustomException("無效的手機號碼格式", HttpStatus.BAD_REQUEST);
@@ -198,6 +173,51 @@ public class AuthService {
         if (!StringUtils.hasText(request.getGender())) {
             throw new CustomException("性別不能為空", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private User checkUserExistence(String email) {
+        return userRepository.findByEmail(email.toLowerCase().trim())
+                .orElseThrow(() -> new UsernameNotFoundException("用戶不存在"));
+    }
+
+    private Authentication authenticateUser(String email, String password) {
+        return authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email.toLowerCase().trim(), password)
+        );
+    }
+
+    private void updateUserLoginInfo(User user, String lastLoginIp) {
+        user.setLastLoginTime(LocalDateTime.now());
+        user.setLastLoginIp(lastLoginIp);
+        userRepository.save(user);
+    }
+
+    private User createNewUser(RegisterRequest request) {
+        LocalDateTime now = LocalDateTime.now();
+        User user = new User();
+        user.setName(request.getName().trim());
+        user.setEmail(request.getEmail().toLowerCase().trim());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPhone(request.getPhone());
+        user.setBirthday(request.getBirthday());
+        user.setGender(request.getGender());
+        user.setRole("ROLE_USER");
+        user.setActive(true);
+        user.setEmailVerified(false);
+        user.setLastLoginTime(now);
+        user.setLastLoginIp("0.0.0.0");
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+        user.setVersion(0);
+
+        Wallet wallet = new Wallet();
+        wallet.setUser(user);
+        wallet.setBalance(0.0);
+        wallet.setCreatedAt(now);
+        wallet.setUpdatedAt(now);
+        user.setWallet(wallet);
+
+        return user;
     }
 
     private LoginResponse buildLoginResponse(User user, String token) {

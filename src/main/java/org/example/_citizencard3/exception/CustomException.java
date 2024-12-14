@@ -97,6 +97,21 @@ public class CustomException extends RuntimeException {
         );
     }
 
+    // 帳號不存在異常
+    public static CustomException accountNotFound(String message) {
+        return new CustomException(message, HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND");
+    }
+
+    // 密碼錯誤異常
+    public static CustomException incorrectPassword(String message) {
+        return new CustomException(message, HttpStatus.UNAUTHORIZED, "INCORRECT_PASSWORD");
+    }
+
+    // 登入失敗異常
+    public static CustomException loginFailed(String message) {
+        return new CustomException(message, HttpStatus.UNAUTHORIZED, "LOGIN_FAILED");
+    }
+
     // 獲取完整錯誤信息
     public String getFullMessage() {
         return String.format("[%s] %s", this.errorCode, this.message);

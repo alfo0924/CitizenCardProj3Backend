@@ -11,6 +11,7 @@ import org.example._citizencard3.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -61,9 +62,12 @@ public class AuthController {
 
             log.info("Login successful for user: {}", request.getEmail());
             return ResponseEntity.ok(result);
+        } catch (UsernameNotFoundException e) {
+            log.error("Login failed: User not found - {}", request.getEmail());
+            throw new CustomException("無此帳號，請先註冊", HttpStatus.NOT_FOUND);
         } catch (BadCredentialsException e) {
-            log.error("Login failed for user: {}", request.getEmail());
-            throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
+            log.error("Login failed: Incorrect password for user - {}", request.getEmail());
+            throw new CustomException("密碼錯誤", HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error("Login failed: {}", e.getMessage());
             throw new CustomException("登入失敗", HttpStatus.INTERNAL_SERVER_ERROR);
