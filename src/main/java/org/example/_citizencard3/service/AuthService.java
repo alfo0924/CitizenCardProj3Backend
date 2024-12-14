@@ -63,13 +63,12 @@ public class AuthService {
             }
 
             String token = jwtTokenProvider.generateToken(authentication);
-            String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
             user.setLastLoginTime(LocalDateTime.now());
-            user.setLastLoginIp("0.0.0.0");
+            user.setLastLoginIp(request.getLastLoginIp());
             userRepository.save(user);
 
-            return buildLoginResponse(user, token, refreshToken);
+            return buildLoginResponse(user, token);
         } catch (BadCredentialsException e) {
             throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
@@ -201,29 +200,22 @@ public class AuthService {
         }
     }
 
-    private LoginResponse buildLoginResponse(User user, String token, String refreshToken) {
+    private LoginResponse buildLoginResponse(User user, String token) {
         return LoginResponse.builder()
-                // 認證相關資訊
                 .token(token)
-                .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getExpirationTime())
-                // 用戶基本資訊
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole())
                 .avatar(user.getAvatar())
-                // 用戶狀態
                 .active(user.isActive())
                 .emailVerified(user.isEmailVerified())
                 .lastLoginTime(user.getLastLoginTime())
                 .lastLoginIp(user.getLastLoginIp())
                 .build();
     }
-
-
-
 
     private UserResponse buildUserResponse(User user) {
         return UserResponse.builder()

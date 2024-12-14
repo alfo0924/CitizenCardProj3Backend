@@ -59,49 +59,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             String jwt = getJwtFromRequest(request);
-            handleAuthentication(request, jwt);
-            filterChain.doFilter(request, response);
-
-        } catch (Exception e) {
-            handleAuthenticationError(response, e);
-        }
-    }
-
-    private void handleAuthentication(HttpServletRequest request, String jwt) {
-        if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-            try {
+            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 if (userDetails != null && userDetails.isEnabled()) {
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.debug("User authenticated successfully: {}", email);
                 }
-            } catch (Exception e) {
-                log.error("無法設置用戶認證: {}", e.getMessage());
-                SecurityContextHolder.clearContext();
             }
+
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            log.error("JWT authentication failed: {}", e.getMessage());
+            handleAuthenticationError(response, e);
         }
     }
 
-    private void handleAuthenticationError(HttpServletResponse response, Exception e) {
-        log.error("JWT認證處理失敗: {}", e.getMessage());
+    private void handleAuthenticationError(HttpServletResponse response, Exception e) throws IOException {
         SecurityContextHolder.clearContext();
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        try {
-            response.getWriter().write("{\"error\":\"認證失敗\",\"message\":\"" + e.getMessage() + "\"}");
-        } catch (IOException ex) {
-            log.error("寫入錯誤響應失敗", ex);
-        }
+        response.getWriter().write("{\"error\":\"認證失敗\",\"message\":\"" + e.getMessage() + "\"}");
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
@@ -135,7 +117,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (isPublic) {
-            log.debug("公開訪問路徑: {}", path);
+            log.debug("Public access path: {}", path);
         }
 
         return isPublic;

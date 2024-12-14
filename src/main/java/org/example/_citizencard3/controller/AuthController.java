@@ -16,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +39,6 @@ public class AuthController {
 
             Map<String, Object> result = new HashMap<>();
             result.put("token", response.getToken());
-            result.put("refreshToken", response.getRefreshToken());
-            result.put("tokenType", response.getTokenType());
-            result.put("expiresIn", response.getExpiresIn());
             result.put("user", UserResponse.builder()
                     .id(response.getId())
                     .name(response.getName())
@@ -53,9 +51,13 @@ public class AuthController {
                     .avatar(response.getAvatar())
                     .active(response.isActive())
                     .emailVerified(response.isEmailVerified())
-                    .lastLoginTime(response.getLastLoginTime())
-                    .lastLoginIp(response.getLastLoginIp())
+                    .lastLoginTime(LocalDateTime.now())
+                    .lastLoginIp(request.getIpAddress())
                     .build());
+
+            if (response.getWallet() != null) {
+                result.put("wallet", response.getWallet());
+            }
 
             log.info("Login successful for user: {}", request.getEmail());
             return ResponseEntity.ok(result);
@@ -79,6 +81,11 @@ public class AuthController {
             request.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
             request.setGender(request.getGender() != null ? request.getGender().trim() : null);
             request.setAddress(request.getAddress() != null ? request.getAddress().trim() : null);
+            request.setCreatedAt(LocalDateTime.now());
+            request.setUpdatedAt(LocalDateTime.now());
+            request.setVersion(0);
+            request.setActive(true);
+            request.setEmailVerified(false);
 
             UserResponse response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -112,25 +119,6 @@ public class AuthController {
         }
         String jwtToken = token.substring(7);
         UserResponse response = authService.getProfile(jwtToken);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/check")
-    public ResponseEntity<Map<String, Object>> checkToken(
-            @RequestHeader(value = "Authorization", required = false) String token) {
-        Map<String, Object> response = new HashMap<>();
-        if (token == null || !token.startsWith("Bearer ")) {
-            response.put("valid", false);
-            return ResponseEntity.ok(response);
-        }
-
-        String jwtToken = token.substring(7);
-        boolean isValid = authService.validateToken(jwtToken);
-        response.put("valid", isValid);
-
-        if (isValid) {
-            response.put("user", authService.getProfile(jwtToken));
-        }
         return ResponseEntity.ok(response);
     }
 

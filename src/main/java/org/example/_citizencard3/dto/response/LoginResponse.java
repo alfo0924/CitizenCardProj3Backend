@@ -1,10 +1,6 @@
 package org.example._citizencard3.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.example._citizencard3.model.Wallet;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,9 +11,6 @@ import java.time.LocalDateTime;
 public class LoginResponse {
     // JWT相關欄位
     private String token;
-    private String refreshToken;
-    private String tokenType;
-    private long expiresIn;
 
     // 用戶基本資訊 (對應 users 表)
     private Long id;
@@ -29,8 +22,6 @@ public class LoginResponse {
     private String role;
     private String address;
     private String avatar;
-
-    // 用戶狀態
     private boolean active;
     private boolean emailVerified;
     private LocalDateTime lastLoginTime;
@@ -38,7 +29,32 @@ public class LoginResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer version;
+    @Getter
+    private String tokenType;
+
+    @Getter
+    private long expiresIn;
 
     // 錢包資訊 (對應 wallets 表)
-    private Wallet wallet;
+    private WalletInfo wallet;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class WalletInfo {
+        private Long id;
+        private Double balance;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+    }    public LoginResponse tokenType(String tokenType) {
+        this.tokenType = tokenType;
+        return this;
+    }
+
+    public LoginResponse expiresIn(long expiresIn) {
+        this.expiresIn = expiresIn;
+        return this;
+    }
+
 }

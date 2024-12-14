@@ -2,13 +2,13 @@ package org.example._citizencard3.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequest {
-
     @NotBlank(message = "姓名不能為空")
     @Size(min = 2, max = 50, message = "姓名長度必須在2-50個字元之間")
     private String name;
@@ -40,14 +40,10 @@ public class RegisterRequest {
     @Size(max = 200, message = "頭像URL長度不能超過200個字元")
     private String avatar;
 
-    @AssertTrue(message = "生日不能大於今天")
-    private boolean isValidBirthday() {
-        if (birthday == null) return true;
-        try {
-            return java.time.LocalDate.parse(birthday)
-                    .isBefore(java.time.LocalDate.now());
-        } catch (Exception e) {
-            return false;
-        }
-    }
+    private String role = "ROLE_USER";
+    private Boolean active = true;
+    private Boolean emailVerified = false;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Integer version = 0;
 }
