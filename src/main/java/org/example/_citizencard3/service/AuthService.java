@@ -203,20 +203,26 @@ public class AuthService {
 
     private LoginResponse buildLoginResponse(User user, String token, String refreshToken) {
         return LoginResponse.builder()
+                // 認證相關資訊
                 .token(token)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getExpirationTime())
+                // 用戶基本資訊
                 .id(user.getId())
-                .email(user.getEmail())
                 .name(user.getName())
+                .email(user.getEmail())
                 .role(user.getRole())
                 .avatar(user.getAvatar())
+                // 用戶狀態
+                .active(user.isActive())
                 .emailVerified(user.isEmailVerified())
                 .lastLoginTime(user.getLastLoginTime())
                 .lastLoginIp(user.getLastLoginIp())
                 .build();
     }
+
+
 
 
     private UserResponse buildUserResponse(User user) {

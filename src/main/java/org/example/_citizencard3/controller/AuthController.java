@@ -31,32 +31,39 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
         try {
             log.info("Attempting login for user: {}", request.getEmail());
             LoginResponse response = authService.login(request);
             if (response == null) {
                 throw new CustomException("登入失敗", HttpStatus.INTERNAL_SERVER_ERROR);
             }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("token", response.getToken());
+            result.put("refreshToken", response.getRefreshToken());
+            result.put("user", response);
+
             log.info("Login successful for user: {}", request.getEmail());
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(result);
         } catch (BadCredentialsException e) {
             log.error("Login failed for user: {}", request.getEmail());
             throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
         }
     }
 
-
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
             log.info("Processing registration for user: {}", request.getEmail());
             validateRegistrationRequest(request);
+
             request.setEmail(request.getEmail().toLowerCase().trim());
             request.setName(request.getName().trim());
             request.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
             request.setGender(request.getGender() != null ? request.getGender().trim() : null);
             request.setAddress(request.getAddress() != null ? request.getAddress().trim() : null);
+
             UserResponse response = authService.register(request);
             log.info("Registration successful for user: {}", request.getEmail());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -122,20 +129,6 @@ public class AuthController {
             log.error("Token validation failed: {}", e.getMessage());
             response.put("valid", false);
             return ResponseEntity.ok(response);
-        }
-    }
-
-    @PostMapping("/validate-email")
-    public ResponseEntity<Map<String, Object>> validateEmail(@RequestParam String email) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            log.info("Validating email: {}", email);
-            boolean isAvailable = authService.isEmailAvailable(email.toLowerCase().trim());
-            response.put("available", isAvailable);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Email validation failed: {}", e.getMessage());
-            throw new CustomException("電子郵件驗證失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
