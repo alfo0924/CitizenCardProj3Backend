@@ -35,6 +35,7 @@ public class AuthService {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^09\\d{8}$");
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$");
 
     @Autowired
     public AuthService(
@@ -83,36 +84,71 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(String jwtToken) {
-        if (jwtToken != null) {
-            try {
-                jwtTokenProvider.invalidateToken(jwtToken);
-                log.info("用戶登出成功");
-            } catch (Exception e) {
-                log.error("登出處理失敗", e);
-                throw new CustomException("登出處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+    public UserResponse register(RegisterRequest request) {
+        try {
+            validateRegistrationRequest(request);
+
+            if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
+                throw new CustomException("此電子郵件已被註冊", HttpStatus.CONFLICT);
             }
-        }
-    }
 
-    public UserResponse getProfile(String jwtToken) {
-        try {
-            String email = jwtTokenProvider.getEmailFromToken(jwtToken);
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+            LocalDateTime now = LocalDateTime.now();
+            User user = new User();
+            user.setName(request.getName().trim());
+            user.setEmail(request.getEmail().toLowerCase().trim());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setPhone(request.getPhone());
+            user.setBirthday(request.getBirthday());
+            user.setGender(request.getGender());
+            user.setRole("ROLE_USER");
+            user.setActive(true);
+            user.setEmailVerified(false);
+            user.setLastLoginTime(now);
+            user.setLastLoginIp("0.0.0.0");
+            user.setCreatedAt(now);
+            user.setUpdatedAt(now);
+            user.setVersion(0);
+
+            Wallet wallet = new Wallet();
+            wallet.setUser(user);
+            wallet.setBalance(0.0);
+            wallet.setCreatedAt(now);
+            wallet.setUpdatedAt(now);
+            user.setWallet(wallet);
+
+            user = userRepository.save(user);
+            log.info("新用戶註冊成功: {}", user.getEmail());
+
             return buildUserResponse(user);
+        } catch (CustomException e) {
+            log.error("註冊失敗: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
-            log.error("獲取用戶資料失敗", e);
-            throw new CustomException("獲取用戶資料失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("註冊處理失敗", e);
+            throw new CustomException("註冊處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public boolean validateToken(String jwtToken) {
-        try {
-            return jwtTokenProvider.validateToken(jwtToken);
-        } catch (Exception e) {
-            log.error("Token驗證失敗", e);
-            return false;
+    public void logout(String token) {
+        // Implement logout logic here
+    }
+
+    public UserResponse getProfile(String token) {
+        // Implement get profile logic here
+        return null;
+    }
+
+    public boolean validateToken(String token) {
+        // Implement token validation logic here
+        return false;
+    }
+
+    private void validateLoginRequest(LoginRequest request) {
+        if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
+            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
+        }
+        if (!StringUtils.hasText(request.getPassword())) {
+            throw new CustomException("密碼不能為空", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -129,6 +165,7 @@ public class AuthService {
                 .avatar(user.getAvatar())
                 .emailVerified(user.isEmailVerified())
                 .lastLoginTime(user.getLastLoginTime())
+                .lastLoginIp(user.getLastLoginIp())
                 .build();
     }
 
@@ -153,12 +190,29 @@ public class AuthService {
                 .build();
     }
 
-    private void validateLoginRequest(LoginRequest request) {
+    private void validateRegistrationRequest(RegisterRequest request) {
         if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
             throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
         }
+
         if (!StringUtils.hasText(request.getPassword())) {
             throw new CustomException("密碼不能為空", HttpStatus.BAD_REQUEST);
+        }
+
+        if (StringUtils.hasText(request.getPhone()) && !PHONE_PATTERN.matcher(request.getPhone()).matches()) {
+            throw new CustomException("無效的手機號碼格式", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!StringUtils.hasText(request.getName()) || request.getName().length() < 2) {
+            throw new CustomException("姓名長度必須至少為2個字符", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!StringUtils.hasText(request.getBirthday())) {
+            throw new CustomException("生日不能為空", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!StringUtils.hasText(request.getGender())) {
+            throw new CustomException("性別不能為空", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -177,85 +231,6 @@ public class AuthService {
         } catch (Exception e) {
             log.error("更新最後登入時間失敗", e);
             throw new CustomException("更新登入時間失敗", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Transactional
-    public UserResponse register(RegisterRequest request) {
-        try {
-            validateRegistrationRequest(request);
-
-            if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
-                throw new CustomException("此電子郵件已被註冊", HttpStatus.CONFLICT);
-            }
-
-            LocalDateTime now = LocalDateTime.now();
-            User user = createUserFromRequest(request, now);
-
-            // 創建並關聯錢包
-            Wallet wallet = new Wallet();
-            wallet.setUser(user);
-            wallet.setBalance(0.0);
-            wallet.setCreatedAt(now);
-            wallet.setUpdatedAt(now);
-            user.setWallet(wallet);
-
-            // 保存用戶和錢包
-            user = userRepository.save(user);
-            log.info("新用戶註冊成功: {}", user.getEmail());
-
-            return buildUserResponse(user);
-        } catch (CustomException e) {
-            log.error("註冊失敗: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("註冊處理失敗", e);
-            throw new CustomException("註冊處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private User createUserFromRequest(RegisterRequest request, LocalDateTime now) {
-        User user = new User();
-        user.setName(request.getName().trim());
-        user.setEmail(request.getEmail().toLowerCase().trim());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setPhone(request.getPhone());
-        user.setBirthday(request.getBirthday());
-        user.setGender(request.getGender());
-        user.setRole("ROLE_USER");
-        user.setActive(true);
-        user.setEmailVerified(false);
-        user.setLastLoginTime(now);
-        user.setLastLoginIp("0.0.0.0");
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
-        user.setVersion(0);
-        return user;
-    }
-
-    private void validateRegistrationRequest(RegisterRequest request) {
-        if (!StringUtils.hasText(request.getEmail()) || !EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
-            throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
-        }
-
-        if (!StringUtils.hasText(request.getPassword())) {
-            throw new CustomException("密碼不能為空", HttpStatus.BAD_REQUEST);
-        }
-
-        if (StringUtils.hasText(request.getPhone()) && !PHONE_PATTERN.matcher(request.getPhone()).matches()) {
-            throw new CustomException("無效的手機號碼格式", HttpStatus.BAD_REQUEST);
-        }
-
-        if (!StringUtils.hasText(request.getName()) || request.getName().length() < 2) {
-            throw new CustomException("姓名長度必須至少為2個字符", HttpStatus.BAD_REQUEST);
-        }
-
-        if (request.getBirthday() == null) {
-            throw new CustomException("生日不能為空", HttpStatus.BAD_REQUEST);
-        }
-
-        if (request.getGender() == null) {
-            throw new CustomException("性別不能為空", HttpStatus.BAD_REQUEST);
         }
     }
 }

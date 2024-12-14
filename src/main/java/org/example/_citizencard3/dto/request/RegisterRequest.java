@@ -19,18 +19,18 @@ public class RegisterRequest {
     private String email;
 
     @NotBlank(message = "密碼不能為空")
-    @Size(max = 255, message = "密碼長度不能超過255個字元")
+    @Size(min = 8, max = 255, message = "密碼長度必須在8-255個字元之間")
     private String password;
 
-    @Pattern(regexp = "^09\\d{8}$", message = "請輸入有效的手機號碼格式（例如：0912345678）")
+    @Pattern(regexp = "^(|09\\d{8})$", message = "請輸入有效的手機號碼格式（例如：0912345678）或留空")
     @Size(max = 20, message = "手機號碼長度不能超過20個字元")
     private String phone;
 
-    @NotNull(message = "生日不能為空")
-    @Size(max = 10, message = "生日格式不正確")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "生日格式必須為 YYYY-MM-DD")
+    @Size(max = 10, message = "生日長度不能超過10個字元")
     private String birthday;
 
-    @NotNull(message = "性別不能為空")
+    @Pattern(regexp = "^(MALE|FEMALE)$", message = "性別必須是 MALE 或 FEMALE")
     @Size(max = 10, message = "性別長度不能超過10個字元")
     private String gender;
 
