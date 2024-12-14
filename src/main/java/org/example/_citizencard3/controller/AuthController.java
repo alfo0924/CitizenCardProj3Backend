@@ -35,20 +35,36 @@ public class AuthController {
         try {
             log.info("Attempting login for user: {}", request.getEmail());
             LoginResponse response = authService.login(request);
-            if (response == null) {
-                throw new CustomException("登入失敗", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
 
             Map<String, Object> result = new HashMap<>();
             result.put("token", response.getToken());
             result.put("refreshToken", response.getRefreshToken());
-            result.put("user", response);
+            result.put("tokenType", response.getTokenType());
+            result.put("expiresIn", response.getExpiresIn());
+            result.put("user", UserResponse.builder()
+                    .id(response.getId())
+                    .name(response.getName())
+                    .email(response.getEmail())
+                    .phone(response.getPhone())
+                    .birthday(response.getBirthday())
+                    .gender(response.getGender())
+                    .role(response.getRole())
+                    .address(response.getAddress())
+                    .avatar(response.getAvatar())
+                    .active(response.isActive())
+                    .emailVerified(response.isEmailVerified())
+                    .lastLoginTime(response.getLastLoginTime())
+                    .lastLoginIp(response.getLastLoginIp())
+                    .build());
 
             log.info("Login successful for user: {}", request.getEmail());
             return ResponseEntity.ok(result);
         } catch (BadCredentialsException e) {
             log.error("Login failed for user: {}", request.getEmail());
             throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error("Login failed: {}", e.getMessage());
+            throw new CustomException("登入失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -65,7 +81,6 @@ public class AuthController {
             request.setAddress(request.getAddress() != null ? request.getAddress().trim() : null);
 
             UserResponse response = authService.register(request);
-            log.info("Registration successful for user: {}", request.getEmail());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (CustomException e) {
             log.error("Registration failed: {}", e.getMessage());
@@ -77,7 +92,6 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> logout(
             @RequestHeader(value = "Authorization", required = false) String token) {
         try {
-            log.info("Processing logout request");
             if (token != null && token.startsWith("Bearer ")) {
                 String jwtToken = token.substring(7);
                 authService.logout(jwtToken);
@@ -86,7 +100,6 @@ public class AuthController {
             response.put("message", "登出成功");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Logout failed: {}", e.getMessage());
             throw new CustomException("登出失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -94,42 +107,31 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<UserResponse> getProfile(
             @RequestHeader(value = "Authorization", required = false) String token) {
-        try {
-            log.info("Fetching user profile");
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new CustomException("無效的認證令牌", HttpStatus.UNAUTHORIZED);
-            }
-            String jwtToken = token.substring(7);
-            UserResponse response = authService.getProfile(jwtToken);
-            return ResponseEntity.ok(response);
-        } catch (CustomException e) {
-            log.error("Failed to get profile: {}", e.getMessage());
-            throw e;
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new CustomException("無效的認證令牌", HttpStatus.UNAUTHORIZED);
         }
+        String jwtToken = token.substring(7);
+        UserResponse response = authService.getProfile(jwtToken);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/check")
     public ResponseEntity<Map<String, Object>> checkToken(
             @RequestHeader(value = "Authorization", required = false) String token) {
         Map<String, Object> response = new HashMap<>();
-        try {
-            log.info("Checking token validity");
-            if (token == null || !token.startsWith("Bearer ")) {
-                response.put("valid", false);
-                return ResponseEntity.ok(response);
-            }
-            String jwtToken = token.substring(7);
-            boolean isValid = authService.validateToken(jwtToken);
-            response.put("valid", isValid);
-            if (isValid) {
-                response.put("user", authService.getProfile(jwtToken));
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Token validation failed: {}", e.getMessage());
+        if (token == null || !token.startsWith("Bearer ")) {
             response.put("valid", false);
             return ResponseEntity.ok(response);
         }
+
+        String jwtToken = token.substring(7);
+        boolean isValid = authService.validateToken(jwtToken);
+        response.put("valid", isValid);
+
+        if (isValid) {
+            response.put("user", authService.getProfile(jwtToken));
+        }
+        return ResponseEntity.ok(response);
     }
 
     private void validateRegistrationRequest(RegisterRequest request) {

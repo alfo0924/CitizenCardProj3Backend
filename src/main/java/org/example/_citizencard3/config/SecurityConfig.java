@@ -42,8 +42,8 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 認證相關端點
-                        .requestMatchers("/auth/login", "/auth/register", "/auth/validate-email").permitAll()
+                        // 公開端點
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // 公開資源端點
@@ -52,10 +52,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
 
                         // 需要用戶認證的端點
+                        .requestMatchers("/users/**").authenticated()
                         .requestMatchers("/wallets/**").authenticated()
                         .requestMatchers("/movie-tickets/**").authenticated()
-                        .requestMatchers("/discount-coupons/**").authenticated()
                         .requestMatchers("/movie-ticket-qrcodes/**").authenticated()
+                        .requestMatchers("/discount-coupons/**").authenticated()
                         .requestMatchers("/discount-coupon-qrcodes/**").authenticated()
 
                         // 管理員專用端點
@@ -85,14 +86,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3009"));
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
-                "Accept",
-                "Origin"
+                "Accept"
         ));
         configuration.setExposedHeaders(Collections.singletonList("Authorization"));
         configuration.setAllowCredentials(true);
@@ -105,7 +103,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
