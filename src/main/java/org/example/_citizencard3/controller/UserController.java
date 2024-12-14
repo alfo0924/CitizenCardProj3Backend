@@ -3,7 +3,6 @@ package org.example._citizencard3.controller;
 import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
 import org.example._citizencard3.dto.response.UserResponse;
-import org.example._citizencard3.dto.response.UserStatsResponse;
 import org.example._citizencard3.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -81,15 +82,10 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserStatsResponse> getUserStats() {
-        UserStatsResponse stats = userService.getUserStats();
-        return ResponseEntity.ok(stats);
-    }
-
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
+    public ResponseEntity<Map<String, String>> handleException(Exception e) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", e.getMessage());
+        return ResponseEntity.badRequest().body(response);
     }
 }

@@ -16,7 +16,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,26 +47,9 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
             log.info("Processing registration for user: {}", request.getEmail());
-
-            // 初始化用戶數據
-            LocalDateTime now = LocalDateTime.now();
             request.setEmail(request.getEmail().toLowerCase().trim());
             request.setName(request.getName().trim());
             request.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
-            request.setCreatedAt(now);
-            request.setUpdatedAt(now);
-            request.setVersion(0);
-            request.setActive(true);
-            request.setEmailVerified(false);
-            request.setRole("ROLE_USER");
-            request.setLastLoginTime(now);
-            request.setLastLoginIp("0.0.0.0");
-            request.setAvatar("/avatars/default-avatar.jpg");
-
-            // 驗證密碼
-            if (!request.getPassword().equals(request.getConfirmPassword())) {
-                throw new CustomException("密碼與確認密碼不一致", HttpStatus.BAD_REQUEST);
-            }
 
             UserResponse response = authService.register(request);
             log.info("Registration successful for user: {}", request.getEmail());

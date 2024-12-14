@@ -1,6 +1,5 @@
 package org.example._citizencard3.service;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example._citizencard3.dto.request.LoginRequest;
 import org.example._citizencard3.dto.request.RegisterRequest;
@@ -9,7 +8,6 @@ import org.example._citizencard3.dto.response.UserResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.User;
 import org.example._citizencard3.model.Wallet;
-import org.example._citizencard3.model.enums.UserRole;
 import org.example._citizencard3.repository.UserRepository;
 import org.example._citizencard3.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +35,6 @@ public class AuthService {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^09\\d{8}$");
-    private static final Pattern PASSWORD_PATTERN =
-            Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$");
 
     @Autowired
     public AuthService(
@@ -86,7 +82,6 @@ public class AuthService {
         }
     }
 
-
     @Transactional
     public void logout(String jwtToken) {
         if (jwtToken != null) {
@@ -120,19 +115,20 @@ public class AuthService {
             return false;
         }
     }
+
     private LoginResponse buildLoginResponse(User user, String token, String refreshToken) {
         return LoginResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getExpirationTime())
-                .userId(user.getId())
+                .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
-                .role(user.getRole().name())
+                .role(user.getRole())
                 .avatar(user.getAvatar())
-                .isEmailVerified(user.isEmailVerified())
-                .lastLoginTime(user.getLastLoginTime().toString())
+                .emailVerified(user.isEmailVerified())
+                .lastLoginTime(user.getLastLoginTime())
                 .build();
     }
 
@@ -144,12 +140,16 @@ public class AuthService {
                 .phone(user.getPhone())
                 .birthday(user.getBirthday())
                 .gender(user.getGender())
+                .role(user.getRole())
                 .address(user.getAddress())
-                .role(user.getRole().name())
+                .avatar(user.getAvatar())
                 .active(user.isActive())
                 .emailVerified(user.isEmailVerified())
-                .avatar(user.getAvatar())
+                .lastLoginTime(user.getLastLoginTime())
+                .lastLoginIp(user.getLastLoginIp())
                 .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .version(user.getVersion())
                 .build();
     }
 
@@ -189,20 +189,15 @@ public class AuthService {
                 throw new CustomException("此電子郵件已被註冊", HttpStatus.CONFLICT);
             }
 
-            if (!request.getPassword().equals(request.getConfirmPassword())) {
-                throw new CustomException("密碼不一致", HttpStatus.BAD_REQUEST);
-            }
-
             LocalDateTime now = LocalDateTime.now();
             User user = createUserFromRequest(request, now);
 
             // 創建並關聯錢包
-            Wallet wallet = Wallet.builder()
-                    .user(user)
-                    .balance(0.0)
-                    .createdAt(now)
-                    .updatedAt(now)
-                    .build();
+            Wallet wallet = new Wallet();
+            wallet.setUser(user);
+            wallet.setBalance(0.0);
+            wallet.setCreatedAt(now);
+            wallet.setUpdatedAt(now);
             user.setWallet(wallet);
 
             // 保存用戶和錢包
@@ -220,23 +215,22 @@ public class AuthService {
     }
 
     private User createUserFromRequest(RegisterRequest request, LocalDateTime now) {
-        return User.builder()
-                .name(request.getName().trim())
-                .email(request.getEmail().toLowerCase().trim())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone())
-                .birthday(request.getBirthday())
-                .gender(request.getGender())
-                .address(request.getAddress())
-                .role(UserRole.ROLE_USER)
-                .active(true)
-                .emailVerified(false)
-                .lastLoginTime(now)
-                .lastLoginIp("0.0.0.0")
-                .createdAt(now)
-                .updatedAt(now)
-                .version(0)
-                .build();
+        User user = new User();
+        user.setName(request.getName().trim());
+        user.setEmail(request.getEmail().toLowerCase().trim());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPhone(request.getPhone());
+        user.setBirthday(request.getBirthday());
+        user.setGender(request.getGender());
+        user.setRole("ROLE_USER");
+        user.setActive(true);
+        user.setEmailVerified(false);
+        user.setLastLoginTime(now);
+        user.setLastLoginIp("0.0.0.0");
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+        user.setVersion(0);
+        return user;
     }
 
     private void validateRegistrationRequest(RegisterRequest request) {
@@ -244,8 +238,8 @@ public class AuthService {
             throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
         }
 
-        if (!StringUtils.hasText(request.getPassword()) || !PASSWORD_PATTERN.matcher(request.getPassword()).matches()) {
-            throw new CustomException("密碼必須包含大小寫字母、數字和特殊字符，且長度至少為8位", HttpStatus.BAD_REQUEST);
+        if (!StringUtils.hasText(request.getPassword())) {
+            throw new CustomException("密碼不能為空", HttpStatus.BAD_REQUEST);
         }
 
         if (StringUtils.hasText(request.getPhone()) && !PHONE_PATTERN.matcher(request.getPhone()).matches()) {
@@ -264,6 +258,4 @@ public class AuthService {
             throw new CustomException("性別不能為空", HttpStatus.BAD_REQUEST);
         }
     }
-
-
 }

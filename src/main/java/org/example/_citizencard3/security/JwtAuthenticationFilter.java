@@ -52,7 +52,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String path = request.getRequestURI();
             log.debug("Processing request for path: {}", path);
 
-            // 檢查是否為公開路徑
             if (isPublicPath(request)) {
                 log.debug("Public path accessed: {}", path);
                 filterChain.doFilter(request, response);
@@ -117,25 +116,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        // 允許所有OPTIONS請求
         if ("OPTIONS".equalsIgnoreCase(method)) {
             return true;
         }
 
-        // 移除context path以進行比對
         String contextPath = request.getContextPath();
         if (StringUtils.hasText(contextPath) && path.startsWith(contextPath)) {
             path = path.substring(contextPath.length());
         }
 
-        // 檢查基本公開路徑
-        String finalPath1 = path;
+        String finalPath = path;
         boolean isPublic = PUBLIC_PATHS.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, finalPath1));
+                .anyMatch(pattern -> pathMatcher.match(pattern, finalPath));
 
-        // 檢查GET請求的特殊公開路徑
         if (!isPublic && "GET".equalsIgnoreCase(method)) {
-            String finalPath = path;
             isPublic = PUBLIC_GET_PATHS.stream()
                     .anyMatch(pattern -> pathMatcher.match(pattern, finalPath));
         }

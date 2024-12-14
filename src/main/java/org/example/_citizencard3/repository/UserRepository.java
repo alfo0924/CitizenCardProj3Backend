@@ -1,7 +1,6 @@
 package org.example._citizencard3.repository;
 
 import org.example._citizencard3.model.User;
-import org.example._citizencard3.model.enums.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,23 +32,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<User> findByNameContainingOrEmailContaining(
             @Param("search") String search,
-            String s, Pageable pageable
+            Pageable pageable
     );
 
     @Query("SELECT u FROM User u WHERE u.role = :role AND u.active = true")
-    List<User> findActiveUsersByRole(@Param("role") UserRole role, Pageable pageable);
+    List<User> findActiveUsersByRole(@Param("role") String role, Pageable pageable);
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.active = true")
     long countActiveUsers();
 
-    @Query("SELECT COUNT(u) FROM User u WHERE u.active = true")
-    long countByActiveTrue();
-
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :startDate")
     long countNewUsers(@Param("startDate") LocalDateTime startDate);
-
-    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :date")
-    long countByCreatedAtAfter(@Param("date") LocalDateTime date);
 
     @Query("SELECT u FROM User u WHERE u.lastLoginTime IS NOT NULL " +
             "ORDER BY u.lastLoginTime DESC")
@@ -86,12 +79,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LEFT JOIN FETCH u.discountCoupons " +
             "WHERE u.id = :userId")
     Optional<User> findByIdWithDetails(@Param("userId") Long userId);
-
-    @Query("SELECT u FROM User u WHERE u.email = :email AND u.lastLoginTime < :expiryTime")
-    Optional<User> findByEmailAndTokenNotExpired(
-            @Param("email") String email,
-            @Param("expiryTime") LocalDateTime expiryTime
-    );
 
     @Modifying
     @Query("UPDATE User u SET u.lastLoginTime = :loginTime WHERE u.email = :email")
