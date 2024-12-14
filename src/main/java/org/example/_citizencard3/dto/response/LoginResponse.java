@@ -18,24 +18,13 @@ public class LoginResponse {
     private String tokenType;
     private long expiresIn;
 
-    // 對應 users 表的欄位
+    // 基本用戶資訊
     private Long id;
-    private String name;
     private String email;
-    private String phone;
-    private String birthday;
-    private String gender;
+    private String name;
     private String role;
-    private String address;
     private String avatar;
-    private boolean active;
     private boolean emailVerified;
     private LocalDateTime lastLoginTime;
     private String lastLoginIp;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Integer version;
-
-    // 對應 wallets 表的欄位
-    private Double balance;
 }

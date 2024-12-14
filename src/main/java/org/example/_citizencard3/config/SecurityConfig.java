@@ -42,24 +42,23 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 公開端點
+                        // 認證相關端點
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/validate-email").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
 
-                        // 電影相關公開端點
+                        // 公開資源端點
                         .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
-
-                        // 商店相關公開端點
                         .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
 
                         // 需要用戶認證的端點
-                        .requestMatchers("/users/**").authenticated()
                         .requestMatchers("/wallets/**").authenticated()
                         .requestMatchers("/movie-tickets/**").authenticated()
                         .requestMatchers("/discount-coupons/**").authenticated()
+                        .requestMatchers("/movie-ticket-qrcodes/**").authenticated()
+                        .requestMatchers("/discount-coupon-qrcodes/**").authenticated()
 
-                        // 需要管理員權限的端點
+                        // 管理員專用端點
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         // 其他所有請求都需要認證
@@ -70,12 +69,12 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\":\"請先登入\",\"message\":\"未授權訪問\"}");
+                            response.getWriter().write("{\"error\":\"未授權\",\"message\":\"請先登入\"}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(403);
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\":\"權限不足\",\"message\":\"無法訪問此資源\"}");
+                            response.getWriter().write("{\"error\":\"存取被拒絕\",\"message\":\"權限不足\"}");
                         })
                 );
 
@@ -92,7 +91,8 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
-                "Accept"
+                "Accept",
+                "Origin"
         ));
         configuration.setExposedHeaders(Collections.singletonList("Authorization"));
         configuration.setAllowCredentials(true);
@@ -105,7 +105,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean

@@ -35,19 +35,17 @@ public class AuthController {
         try {
             log.info("Attempting login for user: {}", request.getEmail());
             LoginResponse response = authService.login(request);
+            if (response == null) {
+                throw new CustomException("登入失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
             log.info("Login successful for user: {}", request.getEmail());
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             log.error("Login failed for user: {}", request.getEmail());
             throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
-        } catch (CustomException e) {
-            log.error("Login failed: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during login: ", e);
-            throw new CustomException("登入處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
