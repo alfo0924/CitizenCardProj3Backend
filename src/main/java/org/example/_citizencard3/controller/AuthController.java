@@ -16,7 +16,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,12 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             log.error("Login failed for user: {}", request.getEmail());
             throw new CustomException("帳號或密碼錯誤", HttpStatus.UNAUTHORIZED);
+        } catch (CustomException e) {
+            log.error("Login failed: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during login: ", e);
+            throw new CustomException("登入處理失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -48,17 +53,12 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
             log.info("Processing registration for user: {}", request.getEmail());
-
-            // 基本資料驗證和清理
             validateRegistrationRequest(request);
-
-            // 設置基本用戶資料
             request.setEmail(request.getEmail().toLowerCase().trim());
             request.setName(request.getName().trim());
             request.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
             request.setGender(request.getGender() != null ? request.getGender().trim() : null);
             request.setAddress(request.getAddress() != null ? request.getAddress().trim() : null);
-
             UserResponse response = authService.register(request);
             log.info("Registration successful for user: {}", request.getEmail());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -146,29 +146,23 @@ public class AuthController {
                 request.getName().trim().length() > 50) {
             throw new CustomException("姓名長度必須在2-50個字元之間", HttpStatus.BAD_REQUEST);
         }
-
         if (request.getEmail() == null || !request.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$") ||
                 request.getEmail().length() > 100) {
             throw new CustomException("無效的電子郵件格式", HttpStatus.BAD_REQUEST);
         }
-
         if (request.getPassword() == null || request.getPassword().length() < 8 ||
                 request.getPassword().length() > 255) {
             throw new CustomException("密碼長度必須在8-255個字元之間", HttpStatus.BAD_REQUEST);
         }
-
         if (request.getPhone() != null && !request.getPhone().matches("^09\\d{8}$")) {
             throw new CustomException("無效的手機號碼格式", HttpStatus.BAD_REQUEST);
         }
-
         if (request.getBirthday() != null && !request.getBirthday().matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new CustomException("無效的生日格式", HttpStatus.BAD_REQUEST);
         }
-
         if (request.getGender() != null && !request.getGender().matches("^(MALE|FEMALE)$")) {
             throw new CustomException("無效的性別格式", HttpStatus.BAD_REQUEST);
         }
-
         if (request.getAddress() != null && request.getAddress().length() > 500) {
             throw new CustomException("地址長度不能超過500個字元", HttpStatus.BAD_REQUEST);
         }
@@ -183,7 +177,6 @@ public class AuthController {
                 .stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.toList());
-
         response.put("errors", errors);
         return ResponseEntity.badRequest().body(response);
     }

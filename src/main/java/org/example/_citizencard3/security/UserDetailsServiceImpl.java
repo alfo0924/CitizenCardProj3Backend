@@ -69,9 +69,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new CustomException("帳號已被停用", HttpStatus.UNAUTHORIZED);
         }
 
-        if (!user.isEmailVerified()) {
-            log.warn("Attempt to authenticate user with unverified email: {}", user.getEmail());
-            throw new CustomException("請先驗證您的電子郵件", HttpStatus.UNAUTHORIZED);
-        }
+        // 移除郵箱驗證檢查，允許未驗證郵箱的用戶登入
+        // if (!user.isEmailVerified()) {
+        //     log.warn("Attempt to authenticate user with unverified email: {}", user.getEmail());
+        //     throw new CustomException("請先驗證您的電子郵件", HttpStatus.UNAUTHORIZED);
+        // }
     }
 }
