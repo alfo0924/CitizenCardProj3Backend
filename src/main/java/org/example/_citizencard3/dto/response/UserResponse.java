@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
-
     private Long id;
     private String name;
     private String email;
@@ -29,15 +28,4 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer version;
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class WalletInfo {
-        private Long id;
-        private Double balance;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-    }
 }

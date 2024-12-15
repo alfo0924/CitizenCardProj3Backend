@@ -32,7 +32,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<User> findByNameContainingOrEmailContaining(
             @Param("search") String search,
-            Pageable pageable
+            String s, Pageable pageable
     );
 
     @Query("SELECT u FROM User u WHERE u.role = :role AND u.active = true")

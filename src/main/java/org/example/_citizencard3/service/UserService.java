@@ -1,5 +1,6 @@
 package org.example._citizencard3.service;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
 import org.example._citizencard3.dto.response.UserResponse;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    @Getter
     private final PasswordEncoder passwordEncoder;
 
     public UserResponse getCurrentUserProfile() {
@@ -40,7 +42,9 @@ public class UserService {
         user.setBirthday(request.getBirthday());
         user.setGender(request.getGender());
         user.setAddress(request.getAddress());
+        user.setAvatar(request.getAvatar());
         user.setUpdatedAt(LocalDateTime.now());
+        user.setVersion(user.getVersion() + 1);
 
         user = userRepository.save(user);
         return convertToResponse(user);
@@ -49,8 +53,7 @@ public class UserService {
     public List<UserResponse> getAllUsers(int page, int size, String search) {
         if (search != null && !search.isEmpty()) {
             return userRepository.findByNameContainingOrEmailContaining(
-                            search,
-                            PageRequest.of(page, size)
+                            search, search, PageRequest.of(page, size)
                     )
                     .stream()
                     .map(this::convertToResponse)
@@ -72,6 +75,7 @@ public class UserService {
         User user = findUserById(id);
         user.setActive(active);
         user.setUpdatedAt(LocalDateTime.now());
+        user.setVersion(user.getVersion() + 1);
         userRepository.save(user);
     }
 
@@ -83,6 +87,7 @@ public class UserService {
         }
         user.setRole(role);
         user.setUpdatedAt(LocalDateTime.now());
+        user.setVersion(user.getVersion() + 1);
         userRepository.save(user);
     }
 
@@ -91,6 +96,7 @@ public class UserService {
         User user = findUserById(id);
         user.setActive(false);
         user.setUpdatedAt(LocalDateTime.now());
+        user.setVersion(user.getVersion() + 1);
         userRepository.save(user);
     }
 
@@ -111,6 +117,10 @@ public class UserService {
     }
 
     private UserResponse convertToResponse(User user) {
+        return getUserResponse(user);
+    }
+
+    static UserResponse getUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
@@ -118,8 +128,8 @@ public class UserService {
                 .phone(user.getPhone())
                 .birthday(user.getBirthday())
                 .gender(user.getGender())
-                .address(user.getAddress())
                 .role(user.getRole())
+                .address(user.getAddress())
                 .avatar(user.getAvatar())
                 .active(user.isActive())
                 .emailVerified(user.isEmailVerified())
@@ -130,4 +140,5 @@ public class UserService {
                 .version(user.getVersion())
                 .build();
     }
+
 }

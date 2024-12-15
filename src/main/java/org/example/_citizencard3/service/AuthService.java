@@ -27,6 +27,8 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
+import static org.example._citizencard3.service.UserService.getUserResponse;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -165,24 +167,7 @@ public class AuthService {
     }
 
     private UserResponse buildUserResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .birthday(user.getBirthday())
-                .gender(user.getGender())
-                .role(user.getRole())
-                .address(user.getAddress())
-                .avatar(user.getAvatar())
-                .active(user.isActive())
-                .emailVerified(user.isEmailVerified())
-                .lastLoginTime(user.getLastLoginTime())
-                .lastLoginIp(user.getLastLoginIp())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .version(user.getVersion())
-                .build();
+        return getUserResponse(user);
     }
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email.toLowerCase().trim());
