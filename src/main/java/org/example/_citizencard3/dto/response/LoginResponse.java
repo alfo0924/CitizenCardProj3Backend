@@ -1,29 +1,60 @@
 package org.example._citizencard3.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponse {
+    // JWT相關欄位
+    private String token;
 
-    private String token;              // JWT 訪問令牌
-    private String refreshToken;       // 刷新令牌
-    private String tokenType;          // 令牌類型，通常是 "Bearer"
-    private long expiresIn;           // 令牌過期時間（秒）
+    // 用戶基本資訊 (對應 users 表)
+    private Long id;
+    private String name;
+    private String email;
+    private String phone;
+    private String birthday;
+    private String gender;
+    private String role;
+    private String address;
+    private String avatar;
+    private boolean active;
+    private boolean emailVerified;
+    private LocalDateTime lastLoginTime;
+    private String lastLoginIp;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Integer version;
+    @Getter
+    private String tokenType;
 
-    private Long userId;              // 用戶ID
-    private String email;             // 用戶郵箱
-    private String name;              // 用戶名稱
-    private String role;              // 用戶角色
-    private String avatar;            // 用戶頭像URL
+    @Getter
+    private long expiresIn;
 
-    // 額外的用戶信息
-    private boolean isEmailVerified;  // 郵箱是否驗證
-    private String lastLoginTime;     // 最後登入時間
-    private String lastLoginIp;       // 最後登入IP
+    // 錢包資訊 (對應 wallets 表)
+    private WalletInfo wallet;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class WalletInfo {
+        private Long id;
+        private Double balance;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+    }    public LoginResponse tokenType(String tokenType) {
+        this.tokenType = tokenType;
+        return this;
+    }
+
+    public LoginResponse expiresIn(long expiresIn) {
+        this.expiresIn = expiresIn;
+        return this;
+    }
+
 }

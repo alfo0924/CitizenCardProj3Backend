@@ -23,6 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -41,17 +42,42 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 公開端點
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/public/**").permitAll()
-                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 公開資源端點
                         .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // 需要用戶認證的端點
+                        .requestMatchers("/users/**").authenticated()
+                        .requestMatchers("/wallets/**").authenticated()
+                        .requestMatchers("/movie-tickets/**").authenticated()
+                        .requestMatchers("/movie-ticket-qrcodes/**").authenticated()
+                        .requestMatchers("/discount-coupons/**").authenticated()
+                        .requestMatchers("/discount-coupon-qrcodes/**").authenticated()
+
+                        // 管理員專用端點
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // 其他所有請求都需要認證
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\"未授權\",\"message\":\"請先登入\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\"存取被拒絕\",\"message\":\"權限不足\"}");
+                        })
+                );
 
         return http.build();
     }
@@ -59,30 +85,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:8080",
-                "http://localhost:3000",
-                "http://localhost:3009"
-        ));
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"
-        ));
+        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3009"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "Origin",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers",
-                "Refresh-Token"
+                "Accept"
         ));
-        configuration.setExposedHeaders(Arrays.asList(
-                "Access-Control-Allow-Origin",
-                "Access-Control-Allow-Credentials",
-                "Authorization",
-                "Refresh-Token"
-        ));
+        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

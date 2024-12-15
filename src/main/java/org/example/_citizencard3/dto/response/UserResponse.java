@@ -19,15 +19,16 @@ public class UserResponse {
     private String phone;
     private String birthday;
     private String gender;
-    private String address;
     private String role;
+    private String address;
     private String avatar;
     private boolean active;
+    private boolean emailVerified;
+    private LocalDateTime lastLoginTime;
+    private String lastLoginIp;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // 錢包相關資訊
-    private WalletInfo wallet;
+    private Integer version;
 
     @Data
     @Builder
@@ -36,6 +37,7 @@ public class UserResponse {
     public static class WalletInfo {
         private Long id;
         private Double balance;
-        private LocalDateTime lastTransaction;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
     }
 }

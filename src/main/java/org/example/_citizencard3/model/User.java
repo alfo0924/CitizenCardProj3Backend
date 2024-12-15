@@ -4,13 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.example._citizencard3.model.enums.UserRole;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,23 +20,26 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
     @Column(length = 20)
     private String phone;
 
+    @Column(length = 10)
     private String birthday;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role = UserRole.ROLE_USER;
+    @Column(length = 10)
+    private String gender;
+
+    @Column(nullable = false, length = 20)
+    private String role = "ROLE_USER";
 
     @Column(length = 500)
     private String address;
@@ -51,13 +50,13 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
-    @Column(nullable = false)
+    @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
 
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
 
-    @Column(name = "last_login_ip")
+    @Column(name = "last_login_ip", length = 50)
     private String lastLoginIp;
 
     @CreationTimestamp
@@ -65,46 +64,47 @@ public class User {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Version
-    private Integer version;
+    private Integer version = 0;
 
-    // 錢包相關
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Wallet wallet;
 
-    // 添加 getter 和 setter
-    @Setter
-    @Getter
-    @Column(length = 10)
-    private String gender;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MovieTicket> movieTickets;
 
-    // 業務方法
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiscountCoupon> discountCoupons;
+
+    // 基本業務方法
     public void updateLoginInfo(String ip) {
         this.lastLoginTime = LocalDateTime.now();
         this.lastLoginIp = ip;
     }
 
-    public void verifyEmail() {
-        this.emailVerified = true;
-    }
-
-    public void activate() {
-        this.active = true;
-    }
-
-    public void deactivate() {
-        this.active = false;
-    }
-
     public boolean isAdmin() {
-        return this.role == UserRole.ROLE_ADMIN;
+        return "ROLE_ADMIN".equals(this.role);
     }
 
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+    public boolean isEnabled() {
+        return this.active;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+        if (role == null) {
+            role = "ROLE_USER";
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
-
