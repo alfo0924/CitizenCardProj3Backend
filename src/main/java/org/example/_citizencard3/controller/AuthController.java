@@ -32,9 +32,10 @@ public class AuthController {
         try {
             log.info("Attempting login for user: {}", request.getEmail());
 
-            // 檢查帳號是否存在
             if (!authService.existsByEmail(request.getEmail())) {
-                throw new CustomException("此帳號不存在請註冊", HttpStatus.NOT_FOUND);
+                log.error("Login failed: User not found - {}", request.getEmail());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "此帳號不存在請註冊", "status", HttpStatus.NOT_FOUND.value()));
             }
 
             LoginResponse response = authService.login(request);
@@ -54,6 +55,9 @@ public class AuthController {
                     .emailVerified(response.isEmailVerified())
                     .lastLoginTime(LocalDateTime.now())
                     .lastLoginIp(request.getIpAddress())
+                    .createdAt(response.getCreatedAt())
+                    .updatedAt(response.getUpdatedAt())
+                    .version(response.getVersion())
                     .build());
 
             if (response.getWallet() != null) {
@@ -61,26 +65,29 @@ public class AuthController {
             }
 
             return ResponseEntity.ok(result);
-        } catch (UsernameNotFoundException e) {
-            log.error("Login failed: User not found - {}", request.getEmail());
-            throw new CustomException("此帳號不存在請註冊", HttpStatus.NOT_FOUND);
         } catch (BadCredentialsException e) {
             log.error("Login failed: Incorrect password for user - {}", request.getEmail());
-            throw new CustomException("帳號密碼錯誤", HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "帳號密碼錯誤", "status", HttpStatus.UNAUTHORIZED.value()));
+        } catch (CustomException e) {
+            log.error("Login failed: {}", e.getMessage());
+            return ResponseEntity.status(e.getStatus())
+                    .body(Map.of("message", e.getMessage(), "status", e.getStatus().value()));
         } catch (Exception e) {
             log.error("Login failed: {}", e.getMessage());
-            throw new CustomException("登入失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "登入失敗", "status", HttpStatus.INTERNAL_SERVER_ERROR.value()));
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
         try {
             log.info("Processing registration for user: {}", request.getEmail());
 
-            // 檢查帳號是否已存在
             if (authService.existsByEmail(request.getEmail())) {
-                throw new CustomException("此電子郵件已被註冊", HttpStatus.CONFLICT);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("message", "此電子郵件已被註冊", "status", HttpStatus.CONFLICT.value()));
             }
 
             request.setEmail(request.getEmail().toLowerCase().trim());
@@ -92,25 +99,55 @@ public class AuthController {
             request.setEmailVerified(false);
 
             UserResponse response = authService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            Map<String, Object> result = new HashMap<>();
+            result.put("user", response);
+            result.put("status", HttpStatus.CREATED.value());
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (CustomException e) {
             log.error("Registration failed: {}", e.getMessage());
-            throw e;
+            return ResponseEntity.status(e.getStatus())
+                    .body(Map.of("message", e.getMessage(), "status", e.getStatus().value()));
+        } catch (Exception e) {
+            log.error("Registration failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "註冊失敗", "status", HttpStatus.INTERNAL_SERVER_ERROR.value()));
         }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(
+    public ResponseEntity<Map<String, Object>> logout(
             @RequestHeader(value = "Authorization", required = false) String token) {
         try {
             if (token != null && token.startsWith("Bearer ")) {
                 authService.logout(token.substring(7));
             }
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "登出成功");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("message", "登出成功", "status", HttpStatus.OK.value()));
         } catch (Exception e) {
-            throw new CustomException("登出失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Logout failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "登出失敗", "status", HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<Map<String, Object>> getProfile(
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "無效的認證令牌", "status", HttpStatus.UNAUTHORIZED.value()));
+            }
+            String jwtToken = token.substring(7);
+            UserResponse response = authService.getProfile(jwtToken);
+            return ResponseEntity.ok(Map.of("user", response, "status", HttpStatus.OK.value()));
+        } catch (CustomException e) {
+            log.error("Get profile failed: {}", e.getMessage());
+            return ResponseEntity.status(e.getStatus())
+                    .body(Map.of("message", e.getMessage(), "status", e.getStatus().value()));
+        } catch (Exception e) {
+            log.error("Get profile failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "獲取用戶資料失敗", "status", HttpStatus.INTERNAL_SERVER_ERROR.value()));
         }
     }
 

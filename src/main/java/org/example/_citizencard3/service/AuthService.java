@@ -201,5 +201,24 @@ public class AuthService {
             throw new CustomException("登出失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    @Transactional(readOnly = true)
+    public UserResponse getProfile(String token) {
+        try {
+            String email = jwtTokenProvider.getEmailFromToken(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+
+            if (!user.isActive()) {
+                throw new CustomException("帳戶已被停用", HttpStatus.FORBIDDEN);
+            }
+
+            return buildUserResponse(user);
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("獲取用戶資料失敗", e);
+            throw new CustomException("獲取用戶資料失敗", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
