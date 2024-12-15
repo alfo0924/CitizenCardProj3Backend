@@ -16,7 +16,6 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -54,10 +53,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Map<String, Object>> handleUsernameNotFoundException(UsernameNotFoundException ex) {
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "無此帳號，請先註冊");
+        response.put("message", "此帳號不存在請註冊");
         response.put("status", HttpStatus.NOT_FOUND.value());
         response.put("timestamp", System.currentTimeMillis());
-        response.put("path", "/auth/login");
 
         log.error("帳號不存在: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
@@ -75,7 +73,7 @@ public class GlobalExceptionHandler {
         String message;
 
         if (ex instanceof BadCredentialsException) {
-            message = "密碼錯誤";
+            message = "帳號密碼錯誤";
         } else if (ex instanceof DisabledException) {
             message = "帳號已被停用";
         } else if (ex instanceof LockedException) {
@@ -87,7 +85,6 @@ public class GlobalExceptionHandler {
         response.put("message", message);
         response.put("status", HttpStatus.UNAUTHORIZED.value());
         response.put("timestamp", System.currentTimeMillis());
-        response.put("path", "/auth/login");
 
         log.error("認證異常: {}", message);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -122,10 +119,9 @@ public class GlobalExceptionHandler {
         Map<String, Object> response = new HashMap<>();
         response.put("message", ex.getMessage());
         response.put("status", ex.getStatus().value());
-        response.put("errorCode", ex.getErrorCode());
         response.put("timestamp", System.currentTimeMillis());
 
-        log.error("自定義異常: {}", ex.getFullMessage());
+        log.error("自定義異常: {}", ex.getMessage());
         return ResponseEntity.status(ex.getStatus()).body(response);
     }
 
@@ -165,11 +161,6 @@ public class GlobalExceptionHandler {
         response.put("message", "系統發生錯誤，請稍後再試");
         response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         response.put("timestamp", System.currentTimeMillis());
-
-        if (log.isDebugEnabled()) {
-            response.put("error", ex.getClass().getName());
-            response.put("detail", ex.getMessage());
-        }
 
         log.error("系統異常: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
