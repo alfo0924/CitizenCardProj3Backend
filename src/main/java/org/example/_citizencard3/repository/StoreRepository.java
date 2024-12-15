@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -62,4 +64,24 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
     // 合作狀態查詢
     List<Store> findByPartnershipStatusAndActiveTrue(Store.PartnershipStatus status);
+
+    /**
+     * 計算所有活躍的商店數量
+     * @return 活躍商店的數量
+     */
+    long countByActiveTrue();
+
+    /**
+     * 計算在指定日期之後創建的活躍商店數量
+     * @param oneMonthAgo 指定的日期
+     * @return 在指定日期之後創建的活躍商店數量
+     */
+    long countByActiveTrueAndCreatedAtAfter(LocalDateTime oneMonthAgo);
+
+    /**
+     * 計算每個類別的活躍商店數量
+     * @return 包含每個類別及其對應的活躍商店數量的Map
+     */
+    @Query("SELECT s.category, COUNT(s) FROM Store s WHERE s.active = true GROUP BY s.category")
+    Map<String, Long> countByCategory();
 }

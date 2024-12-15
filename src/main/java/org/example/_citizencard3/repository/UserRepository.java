@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -90,4 +91,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.emailVerified = true WHERE u.email = :email")
     void verifyEmail(@Param("email") String email);
+
+    /**
+     * 計算在指定日期之後創建的用戶數量
+     * @param oneMonthAgo 指定的日期
+     * @return 在指定日期之後創建的用戶數量
+     */
+    long countByCreatedAtAfter(LocalDateTime oneMonthAgo);
+
+    /**
+     * 計算在指定日期之後登入的用戶數量
+     * @param oneMonthAgo 指定的日期
+     * @return 在指定日期之後登入的用戶數量
+     */
+    long countByLastLoginTimeAfter(LocalDateTime oneMonthAgo);
+
+    /**
+     * 計算每個角色的用戶數量
+     * @return 包含每個角色及其對應的用戶數量的Map
+     */
+    @Query("SELECT u.role, COUNT(u) FROM User u GROUP BY u.role")
+    Map<String, Long> countByRole();
+
 }

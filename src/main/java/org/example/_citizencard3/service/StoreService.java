@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -173,4 +175,22 @@ public class StoreService {
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
+
+    public long countActiveStores() {
+        return storeRepository.countByActiveTrue();
+    }
+
+    public long countNewStoresAfter(LocalDateTime oneMonthAgo) {
+        return storeRepository.countByActiveTrueAndCreatedAtAfter(oneMonthAgo);
+    }
+
+    public Map<String, Long> getStoreCategoryDistribution() {
+        return storeRepository.findAll().stream()
+                .filter(Store::isActive)
+                .collect(Collectors.groupingBy(
+                        Store::getCategory,
+                        Collectors.counting()
+                ));
+    }
+
 }

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -139,6 +140,23 @@ public class UserService {
                 .updatedAt(user.getUpdatedAt())
                 .version(user.getVersion())
                 .build();
+    }
+
+    public long countAllUsers() {
+        return userRepository.count();
+    }
+
+    public long countNewUsersAfter(LocalDateTime oneMonthAgo) {
+        return userRepository.countByCreatedAtAfter(oneMonthAgo);
+    }
+
+    public Map<String, Long> getUserRoleDistribution() {
+        List<User> allUsers = userRepository.findAll();
+        return allUsers.stream()
+                .collect(Collectors.groupingBy(
+                        User::getRole,
+                        Collectors.counting()
+                ));
     }
 
 }

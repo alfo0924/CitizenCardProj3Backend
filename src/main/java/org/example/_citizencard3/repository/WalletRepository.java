@@ -2,6 +2,7 @@ package org.example._citizencard3.repository;
 
 import org.example._citizencard3.model.Wallet;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -26,4 +27,19 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
     // 查詢餘額小於指定金額的錢包
     List<Wallet> findByBalanceLessThan(Double amount);
+
+    /**
+     * 計算所有錢包的總餘額
+     * @return 所有錢包的總餘額
+     */
+    @Query("SELECT SUM(w.balance) FROM Wallet w")
+    double sumBalance();
+
+    /**
+     * 計算所有錢包的平均餘額
+     * @return 所有錢包的平均餘額
+     */
+    @Query("SELECT AVG(w.balance) FROM Wallet w")
+    double averageBalance();
+
 }

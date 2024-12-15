@@ -194,4 +194,13 @@ public class MovieService {
                 Sort.Direction.DESC : Sort.Direction.ASC;
         return Sort.by(direction, property);
     }
+
+    public long countActiveMovies() {
+        return movieRepository.countByIsShowingTrueAndActiveTrue();
+    }
+
+    public long countNewMoviesAfter(LocalDateTime oneMonthAgo) {
+        return movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo);
+    }
+
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
@@ -71,4 +72,27 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     @Query("SELECT AVG(m.price) FROM Movie m WHERE m.isShowing = true AND m.active = true")
     Double getAverageTicketPrice();
+
+    /**
+     * 計算當前正在上映且處於活躍狀態的電影數量
+     * @return 活躍且正在上映的電影數量
+     */
+    long countByIsShowingTrueAndActiveTrue();
+
+    /**
+     * 計算在指定日期之後創建且處於活躍狀態的電影數量
+     * @param oneMonthAgo 指定的日期
+     * @return 在指定日期之後創建的活躍電影數量
+     */
+    long countByCreatedAtAfterAndActiveTrue(LocalDateTime oneMonthAgo);
+
+
+    // ... (previous methods remain unchanged)
+
+    /**
+     * 計算每個電影類型的活躍電影數量
+     * @return 包含每個電影類型及其對應的活躍電影數量的Map
+     */
+    @Query("SELECT m.genre, COUNT(m) FROM Movie m WHERE m.active = true GROUP BY m.genre")
+    Map<String, Long> countByGenre();
 }
