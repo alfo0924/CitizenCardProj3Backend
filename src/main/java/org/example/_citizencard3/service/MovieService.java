@@ -203,4 +203,7 @@ public class MovieService {
         return movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo);
     }
 
+    public Object getRecentBookings(int i) {
+        return null;
+    }
 }

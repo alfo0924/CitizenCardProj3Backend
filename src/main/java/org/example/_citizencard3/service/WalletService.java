@@ -146,4 +146,8 @@ public class WalletService {
     public double averageBalance() {
         return 0;
     }
+
+    public Object getRecentTransactions(int i) {
+        return null;
+    }
 }

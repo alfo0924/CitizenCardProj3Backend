@@ -162,4 +162,8 @@ public class UserService {
     public long countByLastLoginTimeAfter(LocalDateTime oneMonthAgo) {
         return 0;
     }
+
+    public Object getRecentLogins(int i) {
+        return null;
+    }
 }

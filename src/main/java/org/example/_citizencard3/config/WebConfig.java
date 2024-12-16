@@ -2,9 +2,16 @@ package org.example._citizencard3.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.EncodedResourceResolver;
+import org.springframework.web.servlet.resource.PathResourceResolver;
+import org.springframework.web.servlet.resource.VersionResourceResolver;
+
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -29,7 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
+        registry.addMapping("/api/**")  // 修改為只對 API 路徑進行 CORS 配置
                 .allowedOrigins(allowedOrigins.split(","))
                 .allowedMethods(allowedMethods)
                 .allowedHeaders(allowedHeaders)
@@ -43,21 +50,64 @@ public class WebConfig implements WebMvcConfigurer {
         // 靜態資源處理
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/")
-                .setCachePeriod(3600);
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
+                .resourceChain(true)
+                .addResolver(new VersionResourceResolver()
+                        .addContentVersionStrategy("/**"))
+                .addResolver(new EncodedResourceResolver())
+                .addResolver(new PathResourceResolver());
 
+        // 公共資源
         registry.addResourceHandler("/public/**")
                 .addResourceLocations("classpath:/public/")
-                .setCachePeriod(3600);
+                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS))
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
+
+        // 上傳文件資源
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:uploads/")
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
+
+        // 用戶頭像資源
+        registry.addResourceHandler("/avatars/**")
+                .addResourceLocations("file:avatars/")
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
 
         // API文檔資源
         registry.addResourceHandler("/swagger-ui/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/")
-                .setCachePeriod(3600);
+                .setCacheControl(CacheControl.maxAge(30, TimeUnit.MINUTES))
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
 
         // 系統資源
         registry.addResourceHandler("/system/**")
                 .addResourceLocations("classpath:/system/")
-                .setCachePeriod(3600)
-                .resourceChain(true);
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
+                .resourceChain(true)
+                .addResolver(new VersionResourceResolver()
+                        .addContentVersionStrategy("/**"))
+                .addResolver(new PathResourceResolver());
     }
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        // 首頁路由
+        registry.addViewController("/")
+                .setViewName("forward:/index.html");
+
+        // SPA 路由處理
+        registry.addViewController("/admin/**")
+                .setViewName("forward:/index.html");
+        registry.addViewController("/user/**")
+                .setViewName("forward:/index.html");
+        registry.addViewController("/auth/**")
+                .setViewName("forward:/index.html");
+    }
+
 }
