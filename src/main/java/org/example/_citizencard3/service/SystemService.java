@@ -34,61 +34,60 @@ public class SystemService {
             LocalDateTime oneMonthAgo = now.minusMonths(1);
             LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
+            DashboardStatsResponse.DashboardStatsResponseBuilder builder = DashboardStatsResponse.builder().success(true);
+
             // 基礎統計
-            long totalUsers = userRepository.count();
-            long newUsers = userRepository.countByCreatedAtAfter(oneMonthAgo);
-            long activeUsers = userRepository.countByLastLoginTimeAfter(oneMonthAgo);
-
-            long totalStores = storeRepository.countByActiveTrue();
-            long newStores = storeRepository.countByActiveTrueAndCreatedAtAfter(oneMonthAgo);
-
-            long activeMovies = movieRepository.countByIsShowingTrueAndActiveTrue();
-            long newMovies = movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo);
+            builder.totalUsers(getCountSafely(() -> userRepository.count(), "總用戶數"))
+                    .newUsers(getCountSafely(() -> userRepository.countByCreatedAtAfter(oneMonthAgo), "新用戶數"))
+                    .activeUsers(getCountSafely(() -> userRepository.countByLastLoginTimeAfter(oneMonthAgo), "活躍用戶數"))
+                    .totalStores(getCountSafely(() -> storeRepository.countByActiveTrue(), "總商店數"))
+                    .newStores(getCountSafely(() -> storeRepository.countByActiveTrueAndCreatedAtAfter(oneMonthAgo), "新商店數"))
+                    .activeMovies(getCountSafely(() -> movieRepository.countByIsShowingTrueAndActiveTrue(), "上映電影數"))
+                    .newMovies(getCountSafely(() -> movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo), "新電影數"));
 
             // 財務統計
-            double totalBalance = walletRepository.sumBalance();
-            double averageBalance = walletRepository.averageBalance();
+            builder.totalBalance(getDoubleSafely(() -> walletRepository.sumBalance(), "總餘額"))
+                    .averageBalance(getDoubleSafely(() -> walletRepository.averageBalance(), "平均餘額"));
+
             // 票券統計
-            long totalTickets = movieTicketRepository.count();
-            long validTickets = movieTicketRepository.countByStatusEquals("VALID");
-            long ticketsSoldToday = movieTicketRepository.countByCreatedAtAfter(startOfDay);
+            builder.totalTickets(getCountSafely(() -> movieTicketRepository.count(), "總票券數"))
+                    .validTickets(getCountSafely(() -> movieTicketRepository.countByStatusEquals("VALID"), "有效票券數"))
+                    .ticketsSoldToday(getCountSafely(() -> movieTicketRepository.countByCreatedAtAfter(startOfDay), "今日售票數"));
 
             // 優惠券統計
-            long totalCoupons = discountCouponRepository.count();
-            long activeCoupons = discountCouponRepository.countByStatusEquals("VALID");
-            long couponsUsedToday = discountCouponRepository.countByStatusEqualsAndUpdatedAtAfter("USED", startOfDay);
+            builder.totalCoupons(getCountSafely(() -> discountCouponRepository.count(), "總優惠券數"))
+                    .activeCoupons(getCountSafely(() -> discountCouponRepository.countByStatusEquals("VALID"), "有效優惠券數"))
+                    .couponsUsedToday(getCountSafely(() -> discountCouponRepository.countByStatusEqualsAndUpdatedAtAfter("USED", startOfDay), "今日使用優惠券數"));
 
             // 分佈統計
-            Map<String, Long> userRoleDistribution = getUserRoleDistribution();
-            Map<String, Long> movieGenreDistribution = getMovieGenreDistribution();
-            Map<String, Long> storeCategoryDistribution = getStoreCategoryDistribution();
+            builder.userRoleDistribution(getUserRoleDistribution())
+                    .movieGenreDistribution(getMovieGenreDistribution())
+                    .storeCategoryDistribution(getStoreCategoryDistribution());
 
-            return DashboardStatsResponse.builder()
-                    .success(true)
-                    .totalUsers(totalUsers)
-                    .newUsers(newUsers)
-                    .activeUsers(activeUsers)
-                    .totalStores(totalStores)
-                    .newStores(newStores)
-                    .activeMovies(activeMovies)
-                    .newMovies(newMovies)
-                    .totalBalance(totalBalance)
-                    .averageBalance(averageBalance)
-                    .totalTickets(totalTickets)
-                    .validTickets(validTickets)
-                    .ticketsSoldToday(ticketsSoldToday)
-                    .totalCoupons(totalCoupons)
-                    .activeCoupons(activeCoupons)
-                    .couponsUsedToday(couponsUsedToday)
-                    .userRoleDistribution(userRoleDistribution)
-                    .movieGenreDistribution(movieGenreDistribution)
-                    .storeCategoryDistribution(storeCategoryDistribution)
-                    .timestamp(now)
-                    .build();
+            builder.timestamp(now);
 
+            return builder.build();
         } catch (Exception e) {
             log.error("獲取儀表板數據失敗", e);
             throw new CustomException("獲取儀表板數據失敗: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private long getCountSafely(CountSupplier supplier, String errorMessage) {
+        try {
+            return supplier.getCount();
+        } catch (Exception e) {
+            log.error("獲取{}失敗", errorMessage, e);
+            return 0;
+        }
+    }
+
+    private double getDoubleSafely(DoubleSupplier supplier, String errorMessage) {
+        try {
+            return supplier.getDouble();
+        } catch (Exception e) {
+            log.error("獲取{}失敗", errorMessage, e);
+            return 0.0;
         }
     }
 
@@ -123,5 +122,15 @@ public class SystemService {
             log.error("獲取商店類別分佈失敗", e);
             return new HashMap<>();
         }
+    }
+
+    @FunctionalInterface
+    private interface CountSupplier {
+        long getCount() throws Exception;
+    }
+
+    @FunctionalInterface
+    private interface DoubleSupplier {
+        double getDouble() throws Exception;
     }
 }
