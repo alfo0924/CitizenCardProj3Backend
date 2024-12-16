@@ -159,4 +159,7 @@ public class UserService {
                 ));
     }
 
+    public long countByLastLoginTimeAfter(LocalDateTime oneMonthAgo) {
+        return 0;
+    }
 }

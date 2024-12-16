@@ -138,4 +138,12 @@ public class WalletService {
         coupon.setUpdatedAt(LocalDateTime.now());
         return discountCouponRepository.save(coupon);
     }
+
+    public double sumBalance() {
+        return 0;
+    }
+
+    public double averageBalance() {
+        return 0;
+    }
 }

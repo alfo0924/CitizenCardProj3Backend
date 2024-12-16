@@ -4,25 +4,28 @@ import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.service.MovieService;
 import org.example._citizencard3.service.StoreService;
 import org.example._citizencard3.service.UserService;
+import org.example._citizencard3.service.WalletService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/system")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "${app.cors.allowed-origins}",
+        allowCredentials = "true",
+        allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class SystemController {
 
     private final UserService userService;
     private final MovieService movieService;
     private final StoreService storeService;
+    private final WalletService walletService;
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -32,49 +35,53 @@ public class SystemController {
             LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
 
             // 用戶統計
-            Map<String, Object> userStats = new HashMap<>();
             long totalUsers = userService.countAllUsers();
             long newUsers = userService.countNewUsersAfter(oneMonthAgo);
-            userStats.put("totalUsers", totalUsers);
-            userStats.put("newUsers", newUsers);
+            long activeUsers = userService.countByLastLoginTimeAfter(oneMonthAgo);
 
             // 電影統計
-            Map<String, Object> movieStats = new HashMap<>();
             long activeMovies = movieService.countActiveMovies();
             long newMovies = movieService.countNewMoviesAfter(oneMonthAgo);
-            movieStats.put("activeMovies", activeMovies);
-            movieStats.put("newMovies", newMovies);
 
             // 商店統計
-            Map<String, Object> storeStats = new HashMap<>();
             long totalStores = storeService.countActiveStores();
             long newStores = storeService.countNewStoresAfter(oneMonthAgo);
-            storeStats.put("totalStores", totalStores);
-            storeStats.put("newStores", newStores);
 
-            // 會員分析數據
-            Map<String, Object> userAnalytics = new HashMap<>();
+            // 錢包統計
+            double totalBalance = walletService.sumBalance();
+            double averageBalance = walletService.averageBalance();
+
+            // 角色分佈統計
             Map<String, Long> userRoleDistribution = userService.getUserRoleDistribution();
+
+            // 商店類別分佈統計
+            Map<String, Long> storeCategoryDistribution = storeService.getStoreCategoryDistribution();
+
+            // 組合統計數據
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalUsers", totalUsers);
+            stats.put("newUsers", newUsers);
+            stats.put("activeUsers", activeUsers);
+            stats.put("totalStores", totalStores);
+            stats.put("newStores", newStores);
+            stats.put("activeMovies", activeMovies);
+            stats.put("newMovies", newMovies);
+            stats.put("totalBalance", totalBalance);
+            stats.put("averageBalance", averageBalance);
+
+            // 組合圖表數據
+            Map<String, Object> userAnalytics = new HashMap<>();
             userAnalytics.put("labels", userRoleDistribution.keySet());
             userAnalytics.put("data", userRoleDistribution.values());
 
-            // 商店類型分析
             Map<String, Object> storeAnalytics = new HashMap<>();
-            Map<String, Long> storeCategoryDistribution = storeService.getStoreCategoryDistribution();
             storeAnalytics.put("labels", storeCategoryDistribution.keySet());
             storeAnalytics.put("data", storeCategoryDistribution.values());
 
-            // 組合所有數據
-            dashboardData.put("stats", Map.of(
-                    "totalUsers", totalUsers,
-                    "newUsers", newUsers,
-                    "totalStores", totalStores,
-                    "newStores", newStores,
-                    "activeMovies", activeMovies,
-                    "newMovies", newMovies
-            ));
-            dashboardData.put("userData", userAnalytics);
-            dashboardData.put("storeData", storeAnalytics);
+            // 組合最終響應
+            dashboardData.put("stats", stats);
+            dashboardData.put("userRoleDistribution", userAnalytics);
+            dashboardData.put("storeCategoryDistribution", storeAnalytics);
             dashboardData.put("success", true);
 
             return ResponseEntity.ok(dashboardData);
@@ -90,9 +97,17 @@ public class SystemController {
     @GetMapping("/status")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> checkSystemStatus() {
-        Map<String, Object> status = new HashMap<>();
-        status.put("success", true);
-        status.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.ok(status);
+        try {
+            Map<String, Object> status = new HashMap<>();
+            status.put("success", true);
+            status.put("timestamp", LocalDateTime.now());
+            status.put("service", "running");
+            return ResponseEntity.ok(status);
+        } catch (Exception e) {
+            Map<String, Object> errorStatus = new HashMap<>();
+            errorStatus.put("success", false);
+            errorStatus.put("message", "系統狀態檢查失敗");
+            return ResponseEntity.internalServerError().body(errorStatus);
+        }
     }
 }
