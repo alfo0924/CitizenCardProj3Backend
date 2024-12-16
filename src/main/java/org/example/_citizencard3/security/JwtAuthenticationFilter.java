@@ -69,7 +69,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.debug("User authenticated successfully: {}", email);
+                } else {
+                    log.warn("User not found or disabled: {}", email);
                 }
+            } else if (StringUtils.hasText(jwt)) {
+                log.warn("Invalid JWT token");
             }
 
             filterChain.doFilter(request, response);
