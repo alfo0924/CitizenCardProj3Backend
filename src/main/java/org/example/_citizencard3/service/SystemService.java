@@ -46,9 +46,8 @@ public class SystemService {
             long newMovies = movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo);
 
             // 財務統計
-            double totalBalance = walletRepository.sumBalance() != null ? walletRepository.sumBalance() : 0.0;
-            double averageBalance = walletRepository.averageBalance() != null ? walletRepository.averageBalance() : 0.0;
-
+            double totalBalance = walletRepository.sumBalance();
+            double averageBalance = walletRepository.averageBalance();
             // 票券統計
             long totalTickets = movieTicketRepository.count();
             long validTickets = movieTicketRepository.countByStatusEquals("VALID");

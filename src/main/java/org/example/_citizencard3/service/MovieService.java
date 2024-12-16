@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -203,7 +205,7 @@ public class MovieService {
         return movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo);
     }
 
-    public Object getRecentBookings(int i) {
+    public List<Map<String, Object>> getRecentBookings(int i) {
         return null;
     }
 }

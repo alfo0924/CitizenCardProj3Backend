@@ -163,7 +163,7 @@ public class UserService {
         return 0;
     }
 
-    public Object getRecentLogins(int i) {
+    public List<Map<String, Object>> getRecentLogins(int i) {
         return null;
     }
 }
