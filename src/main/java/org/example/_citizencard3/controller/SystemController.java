@@ -1,6 +1,7 @@
 package org.example._citizencard3.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example._citizencard3.dto.response.DashboardStatsResponse;
 import org.example._citizencard3.service.MovieService;
 import org.example._citizencard3.service.StoreService;
 import org.example._citizencard3.service.UserService;
@@ -29,76 +30,36 @@ public class SystemController {
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<Map<String, Object>> getDashboardStats() {
+    public ResponseEntity<DashboardStatsResponse> getDashboardStats() {
         try {
-            Map<String, Object> dashboardData = new HashMap<>();
             LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
 
-            // 用戶統計
-            long totalUsers = userService.countAllUsers();
-            long newUsers = userService.countNewUsersAfter(oneMonthAgo);
-            long activeUsers = userService.countByLastLoginTimeAfter(oneMonthAgo);
+            DashboardStatsResponse response = DashboardStatsResponse.builder()
+                    .totalUsers(userService.countAllUsers())
+                    .newUsers(userService.countNewUsersAfter(oneMonthAgo))
+                    .activeUsers(userService.countByLastLoginTimeAfter(oneMonthAgo))
+                    .totalStores(storeService.countActiveStores())
+                    .newStores(storeService.countNewStoresAfter(oneMonthAgo))
+                    .activeMovies(movieService.countActiveMovies())
+                    .newMovies(movieService.countNewMoviesAfter(oneMonthAgo))
+                    .totalBalance(walletService.sumBalance())
+                    .averageBalance(walletService.averageBalance())
+                    .userRoleDistribution(userService.getUserRoleDistribution())
+                    .storeCategoryDistribution(storeService.getStoreCategoryDistribution())
+                    .recentLogins(userService.getRecentLogins(10))
+                    .recentTransactions(walletService.getRecentTransactions(10))
+                    .recentMovieBookings(movieService.getRecentBookings(10))
+                    .build();
 
-            // 電影統計
-            long activeMovies = movieService.countActiveMovies();
-            long newMovies = movieService.countNewMoviesAfter(oneMonthAgo);
-
-            // 商店統計
-            long totalStores = storeService.countActiveStores();
-            long newStores = storeService.countNewStoresAfter(oneMonthAgo);
-
-            // 錢包統計
-            double totalBalance = walletService.sumBalance();
-            double averageBalance = walletService.averageBalance();
-
-            // 角色分佈統計
-            Map<String, Long> userRoleDistribution = userService.getUserRoleDistribution();
-
-            // 商店類別分佈統計
-            Map<String, Long> storeCategoryDistribution = storeService.getStoreCategoryDistribution();
-
-            // 組合統計數據
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalUsers", totalUsers);
-            stats.put("newUsers", newUsers);
-            stats.put("activeUsers", activeUsers);
-            stats.put("totalStores", totalStores);
-            stats.put("newStores", newStores);
-            stats.put("activeMovies", activeMovies);
-            stats.put("newMovies", newMovies);
-            stats.put("totalBalance", totalBalance);
-            stats.put("averageBalance", averageBalance);
-
-            // 組合圖表數據
-            Map<String, Object> userAnalytics = new HashMap<>();
-            userAnalytics.put("labels", userRoleDistribution.keySet());
-            userAnalytics.put("data", userRoleDistribution.values());
-
-            Map<String, Object> storeAnalytics = new HashMap<>();
-            storeAnalytics.put("labels", storeCategoryDistribution.keySet());
-            storeAnalytics.put("data", storeCategoryDistribution.values());
-
-            // 新增：最近活動數據
-            Map<String, Object> recentActivities = new HashMap<>();
-            recentActivities.put("recentLogins", userService.getRecentLogins(10));
-            recentActivities.put("recentTransactions", walletService.getRecentTransactions(10));
-            recentActivities.put("recentMovieBookings", movieService.getRecentBookings(10));
-
-            // 組合最終響應
-            dashboardData.put("stats", stats);
-            dashboardData.put("userRoleDistribution", userAnalytics);
-            dashboardData.put("storeCategoryDistribution", storeAnalytics);
-            dashboardData.put("recentActivities", recentActivities);
-            dashboardData.put("success", true);
-
-            return ResponseEntity.ok(dashboardData);
-
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "獲取儀表板數據失敗");
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.internalServerError().body(errorResponse);
+            return ResponseEntity.internalServerError().body(
+                    DashboardStatsResponse.builder()
+                            .success(false)
+                            .message("獲取儀表板數據失敗")
+                            .error(e.getMessage())
+                            .build()
+            );
         }
     }
 
@@ -110,8 +71,6 @@ public class SystemController {
             status.put("success", true);
             status.put("timestamp", LocalDateTime.now());
             status.put("service", "running");
-
-            // 新增：系統健康檢查
             status.put("databaseStatus", checkDatabaseStatus());
             status.put("apiStatus", checkApiStatus());
             status.put("cacheStatus", checkCacheStatus());

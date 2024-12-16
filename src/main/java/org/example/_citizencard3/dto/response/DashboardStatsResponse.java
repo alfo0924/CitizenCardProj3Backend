@@ -13,6 +13,7 @@ public class DashboardStatsResponse {
     private long newUsers;
     private Map<String, Long> userRoleDistribution;
     private long activeUsers;
+    private boolean success;
     // 錢包統計
     private double totalBalance;
     private double averageBalance;

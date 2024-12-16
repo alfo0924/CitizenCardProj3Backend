@@ -32,139 +32,97 @@ public class SystemService {
         try {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime oneMonthAgo = now.minusMonths(1);
-            LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
-            // 用戶統計
-            Map<String, Long> userStats = getUserStats(oneMonthAgo);
+            // 基礎統計
+            long totalUsers = userRepository.count();
+            long newUsers = userRepository.countByCreatedAtAfter(oneMonthAgo);
+            long activeUsers = userRepository.countByLastLoginTimeAfter(oneMonthAgo);
 
-            // 電影統計
-            Map<String, Long> movieStats = getMovieStats(oneMonthAgo);
+            long totalStores = storeRepository.countByActiveTrue();
+            long newStores = storeRepository.countByActiveTrueAndCreatedAtAfter(oneMonthAgo);
 
-            // 商店統計
-            Map<String, Long> storeStats = getStoreStats(oneMonthAgo);
+            long activeMovies = movieRepository.countByIsShowingTrueAndActiveTrue();
+            long newMovies = movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo);
 
-            // 交易統計
-            Map<String, Double> transactionStats = getTransactionStats();
+            // 財務統計
+            double totalBalance = walletRepository.sumBalance() != null ? walletRepository.sumBalance() : 0.0;
+            double averageBalance = walletRepository.averageBalance() != null ? walletRepository.averageBalance() : 0.0;
 
             // 票券統計
-            Map<String, Long> ticketStats = getTicketStats(startOfDay);
+            long totalTickets = movieTicketRepository.count();
+            long validTickets = movieTicketRepository.countByStatusEquals("VALID");
+            long ticketsSoldToday = movieTicketRepository.countByCreatedAtAfter(startOfDay);
 
             // 優惠券統計
-            Map<String, Long> couponStats = getCouponStats(startOfDay);
+            long totalCoupons = discountCouponRepository.count();
+            long activeCoupons = discountCouponRepository.countByStatusEquals("VALID");
+            long couponsUsedToday = discountCouponRepository.countByStatusEqualsAndUpdatedAtAfter("USED", startOfDay);
 
             // 分佈統計
             Map<String, Long> userRoleDistribution = getUserRoleDistribution();
             Map<String, Long> movieGenreDistribution = getMovieGenreDistribution();
             Map<String, Long> storeCategoryDistribution = getStoreCategoryDistribution();
 
-            return buildDashboardResponse(
-                    userStats,
-                    movieStats,
-                    storeStats,
-                    transactionStats,
-                    ticketStats,
-                    couponStats,
-                    userRoleDistribution,
-                    movieGenreDistribution,
-                    storeCategoryDistribution
-            );
+            return DashboardStatsResponse.builder()
+                    .success(true)
+                    .totalUsers(totalUsers)
+                    .newUsers(newUsers)
+                    .activeUsers(activeUsers)
+                    .totalStores(totalStores)
+                    .newStores(newStores)
+                    .activeMovies(activeMovies)
+                    .newMovies(newMovies)
+                    .totalBalance(totalBalance)
+                    .averageBalance(averageBalance)
+                    .totalTickets(totalTickets)
+                    .validTickets(validTickets)
+                    .ticketsSoldToday(ticketsSoldToday)
+                    .totalCoupons(totalCoupons)
+                    .activeCoupons(activeCoupons)
+                    .couponsUsedToday(couponsUsedToday)
+                    .userRoleDistribution(userRoleDistribution)
+                    .movieGenreDistribution(movieGenreDistribution)
+                    .storeCategoryDistribution(storeCategoryDistribution)
+                    .timestamp(now)
+                    .build();
+
         } catch (Exception e) {
             log.error("獲取儀表板數據失敗", e);
             throw new CustomException("獲取儀表板數據失敗: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private Map<String, Long> getUserStats(LocalDateTime oneMonthAgo) {
-        Map<String, Long> stats = new HashMap<>();
-        stats.put("totalUsers", userRepository.count());
-        stats.put("newUsers", userRepository.countByCreatedAtAfter(oneMonthAgo));
-        stats.put("activeUsers", userRepository.countByLastLoginTimeAfter(oneMonthAgo));
-        return stats;
-    }
-
-    private Map<String, Long> getMovieStats(LocalDateTime oneMonthAgo) {
-        Map<String, Long> stats = new HashMap<>();
-        stats.put("activeMovies", movieRepository.countByIsShowingTrueAndActiveTrue());
-        stats.put("newMovies", movieRepository.countByCreatedAtAfterAndActiveTrue(oneMonthAgo));
-        return stats;
-    }
-
-    private Map<String, Long> getStoreStats(LocalDateTime oneMonthAgo) {
-        Map<String, Long> stats = new HashMap<>();
-        stats.put("totalStores", storeRepository.countByActiveTrue());
-        stats.put("newStores", storeRepository.countByActiveTrueAndCreatedAtAfter(oneMonthAgo));
-        return stats;
-    }
-
-    private Map<String, Double> getTransactionStats() {
-        Map<String, Double> stats = new HashMap<>();
-        stats.put("totalBalance", walletRepository.sumBalance());
-        stats.put("averageBalance", walletRepository.averageBalance());
-        return stats;
-    }
-
-    private Map<String, Long> getTicketStats(LocalDateTime startOfDay) {
-        Map<String, Long> stats = new HashMap<>();
-        stats.put("totalTickets", movieTicketRepository.count());
-        stats.put("validTickets", movieTicketRepository.countByStatusEquals("VALID"));
-        stats.put("ticketsSoldToday", movieTicketRepository.countByCreatedAtAfter(startOfDay));
-        return stats;
-    }
-
-    private Map<String, Long> getCouponStats(LocalDateTime startOfDay) {
-        Map<String, Long> stats = new HashMap<>();
-        stats.put("totalCoupons", discountCouponRepository.count());
-        stats.put("activeCoupons", discountCouponRepository.countByStatusEquals("VALID"));
-        stats.put("couponsUsedToday", discountCouponRepository.countByStatusEqualsAndUpdatedAtAfter("USED", startOfDay));
-        return stats;
-    }
-
     @Cacheable(value = "userRoleDistribution", unless = "#result.isEmpty()")
     public Map<String, Long> getUserRoleDistribution() {
-        return userRepository.countByRole();
+        try {
+            Map<String, Long> distribution = userRepository.countByRole();
+            return distribution != null ? distribution : new HashMap<>();
+        } catch (Exception e) {
+            log.error("獲取用戶角色分佈失敗", e);
+            return new HashMap<>();
+        }
     }
 
     @Cacheable(value = "movieGenreDistribution", unless = "#result.isEmpty()")
     public Map<String, Long> getMovieGenreDistribution() {
-        return movieRepository.countByGenre();
+        try {
+            Map<String, Long> distribution = movieRepository.countByGenre();
+            return distribution != null ? distribution : new HashMap<>();
+        } catch (Exception e) {
+            log.error("獲取電影類型分佈失敗", e);
+            return new HashMap<>();
+        }
     }
 
     @Cacheable(value = "storeCategoryDistribution", unless = "#result.isEmpty()")
     public Map<String, Long> getStoreCategoryDistribution() {
-        return storeRepository.countByCategory();
-    }
-
-
-    private DashboardStatsResponse buildDashboardResponse(
-            Map<String, Long> userStats,
-            Map<String, Long> movieStats,
-            Map<String, Long> storeStats,
-            Map<String, Double> transactionStats,
-            Map<String, Long> ticketStats,
-            Map<String, Long> couponStats,
-            Map<String, Long> userRoleDistribution,
-            Map<String, Long> movieGenreDistribution,
-            Map<String, Long> storeCategoryDistribution
-    ) {
-        return DashboardStatsResponse.builder()
-                .totalUsers(userStats.get("totalUsers"))
-                .newUsers(userStats.get("newUsers"))
-                .activeUsers(userStats.get("activeUsers"))
-                .activeMovies(movieStats.get("activeMovies"))
-                .newMovies(movieStats.get("newMovies"))
-                .totalStores(storeStats.get("totalStores"))
-                .newStores(storeStats.get("newStores"))
-                .totalBalance(transactionStats.get("totalBalance"))
-                .averageBalance(transactionStats.get("averageBalance"))
-                .totalTickets(ticketStats.get("totalTickets"))
-                .validTickets(ticketStats.get("validTickets"))
-                .ticketsSoldToday(ticketStats.get("ticketsSoldToday"))
-                .totalCoupons(couponStats.get("totalCoupons"))
-                .activeCoupons(couponStats.get("activeCoupons"))
-                .couponsUsedToday(couponStats.get("couponsUsedToday"))
-                .userRoleDistribution(userRoleDistribution)
-                .movieGenreDistribution(movieGenreDistribution)
-                .storeCategoryDistribution(storeCategoryDistribution)
-                .build();
+        try {
+            Map<String, Long> distribution = storeRepository.countByCategory();
+            return distribution != null ? distribution : new HashMap<>();
+        } catch (Exception e) {
+            log.error("獲取商店類別分佈失敗", e);
+            return new HashMap<>();
+        }
     }
 }

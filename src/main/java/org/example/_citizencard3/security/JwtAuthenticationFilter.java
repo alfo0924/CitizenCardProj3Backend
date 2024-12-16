@@ -59,21 +59,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             String jwt = getJwtFromRequest(request);
-            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-                String email = jwtTokenProvider.getEmailFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (StringUtils.hasText(jwt)) {
+                if (jwtTokenProvider.validateToken(jwt)) {
+                    String email = jwtTokenProvider.getEmailFromToken(jwt);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                if (userDetails != null && userDetails.isEnabled()) {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.debug("User authenticated successfully: {}", email);
+                    if (userDetails != null && userDetails.isEnabled()) {
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        log.debug("User authenticated successfully: {}", email);
+                    } else {
+                        log.warn("User not found or disabled: {}", email);
+                        handleAuthenticationError(response, new RuntimeException("User not found or disabled"));
+                        return;
+                    }
                 } else {
-                    log.warn("User not found or disabled: {}", email);
+                    log.warn("Invalid JWT token");
+                    handleAuthenticationError(response, new RuntimeException("Invalid JWT token"));
+                    return;
                 }
-            } else if (StringUtils.hasText(jwt)) {
-                log.warn("Invalid JWT token");
+            } else {
+                log.debug("No JWT token found in request");
             }
 
             filterChain.doFilter(request, response);
