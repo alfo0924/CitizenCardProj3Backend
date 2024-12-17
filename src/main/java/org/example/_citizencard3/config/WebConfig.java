@@ -7,9 +7,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.resource.EncodedResourceResolver;
 import org.springframework.web.servlet.resource.PathResourceResolver;
-import org.springframework.web.servlet.resource.VersionResourceResolver;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,27 +34,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Schedule相關端點的CORS配置
-        String[] schedulePatterns = {
-                "/api/schedules/**",
-                "/api/schedule/**",
-                "/api/schedules",
-                "/api/schedule",
-                "/schedules/**",
-                "/schedule/**"
-        };
-
-        for (String pattern : schedulePatterns) {
-            registry.addMapping(pattern)
-                    .allowedOrigins("*")
-                    .allowedMethods("GET", "HEAD", "OPTIONS")
-                    .allowedHeaders("*")
-                    .exposedHeaders("*")
-                    .allowCredentials(false)
-                    .maxAge(maxAge);
-        }
-
-        // 一般API的CORS配置
+        // API端點的CORS配置
         registry.addMapping("/api/**")
                 .allowedOrigins(allowedOrigins.split(","))
                 .allowedMethods(allowedMethods)
@@ -64,18 +42,29 @@ public class WebConfig implements WebMvcConfigurer {
                 .exposedHeaders(exposedHeaders)
                 .allowCredentials(allowCredentials)
                 .maxAge(maxAge);
+
+        // 公開資源的CORS配置
+        registry.addMapping("/public/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "HEAD", "OPTIONS")
+                .allowedHeaders("*")
+                .maxAge(maxAge);
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 靜態資源處理
-        registry.addResourceHandler("/static/**")
-                .addResourceLocations("classpath:/static/")
+        // API資源
+        registry.addResourceHandler("/api/**")
+                .addResourceLocations("classpath:/api/")
+                .setCacheControl(CacheControl.noCache())
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
+
+        // 靜態資源
+        registry.addResourceHandler("/static/**", "/assets/**")
+                .addResourceLocations("classpath:/static/", "classpath:/assets/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
                 .resourceChain(true)
-                .addResolver(new VersionResourceResolver()
-                        .addContentVersionStrategy("/**"))
-                .addResolver(new EncodedResourceResolver())
                 .addResolver(new PathResourceResolver());
 
         // 公共資源
@@ -85,49 +74,45 @@ public class WebConfig implements WebMvcConfigurer {
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // 上傳文件資源
+        // 上傳文件
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // 用戶頭像資源
-        registry.addResourceHandler("/avatars/**")
-                .addResourceLocations("file:avatars/")
-                .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
-                .resourceChain(true)
-                .addResolver(new PathResourceResolver());
-
-        // API文檔資源
+        // Swagger文檔
         registry.addResourceHandler("/swagger-ui/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/")
-                .setCacheControl(CacheControl.maxAge(30, TimeUnit.MINUTES))
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // 系統資源
-        registry.addResourceHandler("/system/**")
-                .addResourceLocations("classpath:/system/")
-                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
+        // 錯誤頁面
+        registry.addResourceHandler("/error/**")
+                .addResourceLocations("classpath:/error/")
+                .setCacheControl(CacheControl.noCache())
                 .resourceChain(true)
-                .addResolver(new VersionResourceResolver()
-                        .addContentVersionStrategy("/**"))
                 .addResolver(new PathResourceResolver());
     }
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // 首頁路由
-        registry.addViewController("/")
-                .setViewName("forward:/index.html");
+        // SPA路由
+        String[] spaRoutes = {
+                "/",
+                "/login",
+                "/register",
+                "/profile",
+                "/movies/**",
+                "/schedules/**",
+                "/tickets/**",
+                "/wallet/**",
+                "/admin/**"
+        };
 
-        // SPA 路由處理
-        registry.addViewController("/admin/**")
-                .setViewName("forward:/index.html");
-        registry.addViewController("/user/**")
-                .setViewName("forward:/index.html");
-        registry.addViewController("/auth/**")
-                .setViewName("forward:/index.html");
+        for (String route : spaRoutes) {
+            registry.addViewController(route)
+                    .setViewName("forward:/index.html");
+        }
     }
 }
