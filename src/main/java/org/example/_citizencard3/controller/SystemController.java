@@ -3,11 +3,9 @@ package org.example._citizencard3.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example._citizencard3.dto.response.DashboardStatsResponse;
-import org.example._citizencard3.service.MovieService;
-import org.example._citizencard3.service.StoreService;
+import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.service.SystemService;
-import org.example._citizencard3.service.UserService;
-import org.example._citizencard3.service.WalletService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,143 +25,97 @@ import java.util.Map;
 public class SystemController {
 
     private final SystemService systemService;
-    private final UserService userService;
-    private final MovieService movieService;
-    private final StoreService storeService;
-    private final WalletService walletService;
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<DashboardStatsResponse> getDashboardStats() {
+        log.info("Receiving dashboard statistics request");
         try {
-            log.debug("Fetching dashboard statistics");
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime oneMonthAgo = now.minusMonths(1);
-            LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+            DashboardStatsResponse response = systemService.getDashboardStats();
 
-            // 基礎統計數據
-            long totalUsers = userService.countAllUsers();
-            long newUsers = userService.countNewUsersAfter(oneMonthAgo);
-            long activeUsers = userService.countByLastLoginTimeAfter(oneMonthAgo);
+            if (!response.isSuccess()) {
+                log.warn("Failed to fetch dashboard stats: {}", response.getError());
+                return ResponseEntity
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(response);
+            }
 
-            long totalStores = storeService.countActiveStores();
-            long newStores = storeService.countNewStoresAfter(oneMonthAgo);
-
-            long activeMovies = movieService.countActiveMovies();
-            long newMovies = movieService.countNewMoviesAfter(oneMonthAgo);
-
-            // 財務統計
-            double totalBalance = walletService.sumBalance();
-            double averageBalance = walletService.averageBalance();
-
-            // 分佈統計
-            Map<String, Long> userRoleDistribution = userService.getUserRoleDistribution();
-            Map<String, Long> storeCategoryDistribution = storeService.getStoreCategoryDistribution();
-
-            // 最近活動
-            var recentLogins = userService.getRecentLogins(10);
-            var recentTransactions = walletService.getRecentTransactions(10);
-            var recentBookings = movieService.getRecentBookings(10);
-
-            DashboardStatsResponse response = DashboardStatsResponse.builder()
-                    .success(true)
-                    .totalUsers(totalUsers)
-                    .newUsers(newUsers)
-                    .activeUsers(activeUsers)
-                    .totalStores(totalStores)
-                    .newStores(newStores)
-                    .activeMovies(activeMovies)
-                    .newMovies(newMovies)
-                    .totalBalance(totalBalance)
-                    .averageBalance(averageBalance)
-                    .userRoleDistribution(userRoleDistribution)
-                    .storeCategoryDistribution(storeCategoryDistribution)
-                    .recentLogins(recentLogins)
-                    .recentTransactions(recentTransactions)
-                    .recentMovieBookings(recentBookings)
-                    .timestamp(now)
-                    .build();
-
-            log.debug("Successfully fetched dashboard statistics");
+            log.info("Successfully fetched dashboard statistics");
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
-            log.error("Error fetching dashboard statistics", e);
-            return ResponseEntity.internalServerError().body(
-                    DashboardStatsResponse.builder()
+        } catch (CustomException e) {
+            log.error("Custom error while fetching dashboard statistics", e);
+            return ResponseEntity
+                    .status(e.getStatus())
+                    .body(DashboardStatsResponse.builder()
                             .success(false)
                             .message("獲取儀表板數據失敗")
                             .error(e.getMessage())
                             .timestamp(LocalDateTime.now())
-                            .build()
-            );
+                            .build());
+
+        } catch (Exception e) {
+            log.error("Unexpected error while fetching dashboard statistics", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(DashboardStatsResponse.builder()
+                            .success(false)
+                            .message("系統錯誤")
+                            .error("獲取儀表板數據時發生未預期的錯誤")
+                            .timestamp(LocalDateTime.now())
+                            .build());
         }
     }
 
     @GetMapping("/status")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> checkSystemStatus() {
+        log.info("Checking system status");
         try {
-            log.debug("Checking system status");
-            String dbStatus = checkDatabaseStatus();
-            String apiStatus = checkApiStatus();
-            String cacheStatus = checkCacheStatus();
+            Map<String, String> statusChecks = systemService.checkSystemStatus();
 
-            if (!"connected".equals(dbStatus) ||
-                    !"operational".equals(apiStatus) ||
-                    !"running".equals(cacheStatus)) {
-                throw new RuntimeException("系統服務異常");
+            boolean allSystemsOperational = statusChecks.values()
+                    .stream()
+                    .allMatch(status -> "operational".equals(status) ||
+                            "connected".equals(status) ||
+                            "running".equals(status));
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", allSystemsOperational);
+            response.put("timestamp", LocalDateTime.now());
+            response.put("statuses", statusChecks);
+
+            if (!allSystemsOperational) {
+                response.put("message", "部分系統服務異常");
+                return ResponseEntity
+                        .status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(response);
             }
 
-            Map<String, Object> status = new HashMap<>();
-            status.put("success", true);
-            status.put("timestamp", LocalDateTime.now());
-            status.put("service", "running");
-            status.put("databaseStatus", dbStatus);
-            status.put("apiStatus", apiStatus);
-            status.put("cacheStatus", cacheStatus);
+            log.info("System status check completed successfully");
+            return ResponseEntity.ok(response);
 
-            log.debug("System status check completed successfully");
-            return ResponseEntity.ok(status);
+        } catch (CustomException e) {
+            log.error("Custom error during system status check", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "系統狀態檢查失敗");
+            errorResponse.put("error", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            return ResponseEntity
+                    .status(e.getStatus())
+                    .body(errorResponse);
 
         } catch (Exception e) {
-            log.error("System status check failed", e);
-            Map<String, Object> errorStatus = new HashMap<>();
-            errorStatus.put("success", false);
-            errorStatus.put("message", "系統狀態檢查失敗");
-            errorStatus.put("error", e.getMessage());
-            errorStatus.put("timestamp", LocalDateTime.now());
-            return ResponseEntity.internalServerError().body(errorStatus);
-        }
-    }
-
-    private String checkDatabaseStatus() {
-        try {
-            userService.countAllUsers(); // 簡單的數據庫檢查
-            return "connected";
-        } catch (Exception e) {
-            log.error("Database check failed", e);
-            return "disconnected";
-        }
-    }
-
-    private String checkApiStatus() {
-        try {
-            // 實現基本的 API 健康檢查
-            return "operational";
-        } catch (Exception e) {
-            log.error("API check failed", e);
-            return "failed";
-        }
-    }
-
-    private String checkCacheStatus() {
-        try {
-            // 實現緩存服務檢查
-            return "running";
-        } catch (Exception e) {
-            log.error("Cache check failed", e);
-            return "stopped";
+            log.error("Unexpected error during system status check", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "系統錯誤");
+            errorResponse.put("error", "系統狀態檢查時發生未預期的錯誤");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
         }
     }
 }
