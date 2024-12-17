@@ -23,7 +23,7 @@ public class ScheduleService {
     @Autowired
     private MovieRepository movieRepository;
 
-    // 基本查詢方法
+    // 基本查詢方法 - 所有方法都不依賴用戶登入狀態
     public List<Schedule> findAllSchedules() {
         return scheduleRepository.findAll();
     }
@@ -69,12 +69,11 @@ public class ScheduleService {
         return scheduleRepository.countSchedulesByMovieAndDateRange(movieId, startTime, endTime);
     }
 
-    // 座位相關操作
+    // 座位相關操作 - 需要事務管理
     @Transactional
     public Schedule updateAvailableSeats(Long id, int seatsToBook) {
         Schedule schedule = findScheduleById(id);
         validateSeatBooking(schedule, seatsToBook);
-
         schedule.setAvailableSeats(schedule.getAvailableSeats() - seatsToBook);
         schedule.setUpdatedAt(LocalDateTime.now());
         return scheduleRepository.save(schedule);
@@ -88,7 +87,7 @@ public class ScheduleService {
         return scheduleRepository.save(schedule);
     }
 
-    // 場次管理
+    // 場次管理 - 需要事務管理
     @Transactional
     public Schedule createSchedule(Schedule schedule) {
         validateSchedule(schedule);
@@ -103,14 +102,12 @@ public class ScheduleService {
     public Schedule updateSchedule(Long id, Schedule schedule) {
         Schedule existingSchedule = findScheduleById(id);
         validateSchedule(schedule);
-
         existingSchedule.setShowTime(schedule.getShowTime());
         existingSchedule.setHall(schedule.getHall());
         existingSchedule.setTotalSeats(schedule.getTotalSeats());
         existingSchedule.setAvailableSeats(schedule.getAvailableSeats());
         existingSchedule.setActive(schedule.isActive());
         existingSchedule.setUpdatedAt(LocalDateTime.now());
-
         return scheduleRepository.save(existingSchedule);
     }
 
@@ -143,21 +140,17 @@ public class ScheduleService {
         if (schedule.getShowTime() == null) {
             throw new CustomException("放映時間不能為空", HttpStatus.BAD_REQUEST);
         }
-
         if (schedule.getShowTime().isBefore(LocalDateTime.now())) {
             throw new CustomException("放映時間不能早於現在", HttpStatus.BAD_REQUEST);
         }
-
         Optional<Movie> movie = movieRepository.findById(schedule.getMovieId());
         if (movie.isEmpty()) {
             throw new CustomException("電影不存在", HttpStatus.NOT_FOUND);
         }
-
         Movie movieEntity = movie.get();
         if (schedule.getShowTime().isAfter(movieEntity.getEndDate())) {
             throw new CustomException("場次時間超出電影下架時間", HttpStatus.BAD_REQUEST);
         }
-
         validateSeats(schedule);
         validateScheduleConflict(schedule);
     }
@@ -166,11 +159,9 @@ public class ScheduleService {
         if (schedule.getTotalSeats() <= 0) {
             throw new CustomException("總座位數必須大於0", HttpStatus.BAD_REQUEST);
         }
-
         if (schedule.getTotalSeats() > 300) {
             throw new CustomException("總座位數不能超過300", HttpStatus.BAD_REQUEST);
         }
-
         if (schedule.getAvailableSeats() > schedule.getTotalSeats()) {
             throw new CustomException("可用座位數不能大於總座位數", HttpStatus.BAD_REQUEST);
         }
@@ -182,7 +173,6 @@ public class ScheduleService {
                 schedule.getShowTime().minusHours(3),
                 schedule.getShowTime().plusHours(3)
         );
-
         if (!conflictSchedules.isEmpty()) {
             throw new CustomException("該影廳在此時段已有其他場次安排", HttpStatus.CONFLICT);
         }
@@ -192,15 +182,12 @@ public class ScheduleService {
         if (seatsToBook <= 0) {
             throw new CustomException("訂票數量必須大於0", HttpStatus.BAD_REQUEST);
         }
-
         if (schedule.getAvailableSeats() < seatsToBook) {
             throw new CustomException("可用座位數不足", HttpStatus.BAD_REQUEST);
         }
-
         if (!schedule.isActive()) {
             throw new CustomException("此場次已關閉", HttpStatus.BAD_REQUEST);
         }
-
         if (schedule.getShowTime().isBefore(LocalDateTime.now())) {
             throw new CustomException("此場次已過期", HttpStatus.BAD_REQUEST);
         }
@@ -210,7 +197,6 @@ public class ScheduleService {
         if (startTime == null || endTime == null) {
             throw new CustomException("起始時間和結束時間不能為空", HttpStatus.BAD_REQUEST);
         }
-
         if (startTime.isAfter(endTime)) {
             throw new CustomException("起始時間不能晚於結束時間", HttpStatus.BAD_REQUEST);
         }

@@ -63,8 +63,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/movies/**", "/schedules/**", "/stores/**").permitAll()
-                        .requestMatchers("/users/**", "/wallets/**", "/movie-tickets/**", "/movie-ticket-qrcodes/**", "/discount-coupons/**", "/discount-coupon-qrcodes/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedules").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
+                        .requestMatchers("/users/**", "/wallets/**", "/movie-tickets/**",
+                                "/movie-ticket-qrcodes/**", "/discount-coupons/**",
+                                "/discount-coupon-qrcodes/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

@@ -32,13 +32,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/error",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/system/**"
+            "/system/**",
+            "/api/schedules/**"  // 添加schedule相關的路徑
     );
 
     private final List<String> PUBLIC_GET_PATHS = Arrays.asList(
             "/movies/**",
             "/stores/**",
             "/schedules/**",
+            "/api/schedules",     // 添加schedule根路徑
+            "/api/schedules/**",  // 添加所有schedule子路徑
             "/discounts/public/**"
     );
 

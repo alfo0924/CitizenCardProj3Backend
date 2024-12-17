@@ -36,12 +36,20 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")  // 修改為只對 API 路徑進行 CORS 配置
+        // 一般API的CORS配置
+        registry.addMapping("/api/**")
                 .allowedOrigins(allowedOrigins.split(","))
                 .allowedMethods(allowedMethods)
                 .allowedHeaders(allowedHeaders)
                 .exposedHeaders(exposedHeaders)
                 .allowCredentials(allowCredentials)
+                .maxAge(maxAge);
+
+        // Schedule相關端點的特殊CORS配置
+        registry.addMapping("/api/schedules/**")
+                .allowedOrigins("*")  // 允許所有來源
+                .allowedMethods("GET", "OPTIONS")  // 只允許GET和OPTIONS方法
+                .allowedHeaders("*")  // 允許所有headers
                 .maxAge(maxAge);
     }
 
@@ -109,5 +117,4 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addViewController("/auth/**")
                 .setViewName("forward:/index.html");
     }
-
 }
