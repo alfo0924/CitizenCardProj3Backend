@@ -26,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsServiceImpl userDetailsService;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
+    // 更新PUBLIC_PATHS，包含所有可能的schedule路徑模式
     private final List<String> PUBLIC_PATHS = Arrays.asList(
             "/auth/**",
             "/public/**",
@@ -33,21 +34,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/system/**",
-            "/api/schedules/**",      // Schedule API路徑
-            "/api/schedule/**",       // 額外支援單數形式
-            "/schedules/**",          // 支援無api前綴
-            "/schedule/**"            // 支援無api前綴單數形式
+            "/api/schedules",         // 精確匹配根路徑
+            "/api/schedule",          // 精確匹配根路徑單數形式
+            "/api/schedules/**",      // 所有子路徑
+            "/api/schedule/**",       // 所有子路徑單數形式
+            "/schedules",             // 無api前綴根路徑
+            "/schedule",              // 無api前綴根路徑單數形式
+            "/schedules/**",          // 無api前綴所有子路徑
+            "/schedule/**"            // 無api前綴所有子路徑單數形式
     );
 
+    // 更新PUBLIC_GET_PATHS，確保包含所有GET請求的公開路徑
     private final List<String> PUBLIC_GET_PATHS = Arrays.asList(
             "/movies/**",
             "/stores/**",
-            "/schedules/**",
-            "/schedule/**",           // 支援單數形式
-            "/api/schedules/**",      // 完整API路徑
-            "/api/schedule/**",       // 支援單數形式
-            "/api/schedules",         // 根路徑
-            "/api/schedule",          // 根路徑單數形式
+            "/api/movies/**",
+            "/api/stores/**",
+            "/schedules",             // 精確匹配
+            "/schedule",              // 精確匹配單數形式
+            "/schedules/**",          // 所有子路徑
+            "/schedule/**",           // 所有子路徑單數形式
+            "/api/schedules",         // 精確匹配API路徑
+            "/api/schedule",          // 精確匹配API路徑單數形式
+            "/api/schedules/**",      // API所有子路徑
+            "/api/schedule/**",       // API所有子路徑單數形式
             "/discounts/public/**"
     );
 
@@ -59,16 +69,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         try {
             String path = request.getRequestURI();
-            log.debug("Processing request for path: {}", path);
+            String method = request.getMethod();
+            log.debug("Processing {} request for path: {}", method, path);
 
-            // 檢查是否為公開路徑
             if (isPublicPath(request)) {
                 log.debug("Public path accessed: {}", path);
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // 處理JWT認證
             String jwt = getJwtFromRequest(request);
             if (StringUtils.hasText(jwt)) {
                 if (jwtTokenProvider.validateToken(jwt)) {
@@ -132,7 +141,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             path = path.substring(contextPath.length());
         }
 
-        String finalPath = path;
+        // 標準化路徑，移除尾部斜線
+        String finalPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
 
         // 檢查是否為公開路徑
         boolean isPublic = PUBLIC_PATHS.stream()
@@ -145,7 +155,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (isPublic) {
-            log.debug("Public access path: {}", path);
+            log.debug("Public access granted for path: {}", path);
+        } else {
+            log.debug("Protected path access attempt: {}", path);
         }
 
         return isPublic;

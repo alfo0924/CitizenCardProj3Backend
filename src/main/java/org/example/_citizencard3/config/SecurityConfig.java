@@ -61,10 +61,11 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 公開訪問的端點
+                        // 基本公開訪問端點
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Schedule相關的公開端點
+
+                        // Schedule相關的公開端點 - 複數形式
                         .requestMatchers("/api/schedules/**").permitAll()
                         .requestMatchers("/api/schedules").permitAll()
                         .requestMatchers("/api/schedules/{id}").permitAll()
@@ -72,15 +73,38 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/schedules/available").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/schedules/date-range").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/schedules/hall/**").permitAll()
+
+                        // Schedule相關的公開端點 - 單數形式
+                        .requestMatchers("/api/schedule/**").permitAll()
+                        .requestMatchers("/api/schedule").permitAll()
+                        .requestMatchers("/api/schedule/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedule/movie/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedule/available").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedule/date-range").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedule/hall/**").permitAll()
+
+                        // 無API前綴的Schedule端點 - 複數形式
+                        .requestMatchers("/schedules/**").permitAll()
+                        .requestMatchers("/schedules").permitAll()
+                        .requestMatchers("/schedules/{id}").permitAll()
+
+                        // 無API前綴的Schedule端點 - 單數形式
+                        .requestMatchers("/schedule/**").permitAll()
+                        .requestMatchers("/schedule").permitAll()
+                        .requestMatchers("/schedule/{id}").permitAll()
+
                         // 其他公開端點
                         .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
+
                         // 需要認證的端點
                         .requestMatchers("/users/**", "/wallets/**", "/movie-tickets/**",
                                 "/movie-ticket-qrcodes/**", "/discount-coupons/**",
                                 "/discount-coupon-qrcodes/**").authenticated()
+
                         // 管理員專用端點
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+
                         // 其他所有請求都需要認證
                         .anyRequest().authenticated()
                 )

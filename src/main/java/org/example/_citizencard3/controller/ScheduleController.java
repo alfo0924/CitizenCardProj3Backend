@@ -12,53 +12,46 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/schedules")
+@RequestMapping({"/api/schedules", "/api/schedule"}) // 支援複數和單數形式
 @CrossOrigin(origins = "*")
 public class ScheduleController {
 
     @Autowired
     private ScheduleService scheduleService;
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping
+    @GetMapping({"", "/"}) // 支援根路徑訪問
     public ResponseEntity<List<Schedule>> getAllSchedules() {
         return ResponseEntity.ok(scheduleService.findAllSchedules());
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/{id}")
+    @GetMapping({"/{id}", "/detail/{id}"}) // 支援多種ID查詢路徑
     public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
         return ResponseEntity.ok(scheduleService.findScheduleById(id));
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/movie/{movieId}")
+    @GetMapping({"/movie/{movieId}", "/film/{movieId}"}) // 支援多種電影查詢路徑
     public ResponseEntity<List<Schedule>> getSchedulesByMovie(@PathVariable Long movieId) {
         return ResponseEntity.ok(scheduleService.findSchedulesByMovie(movieId));
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/available")
+    @GetMapping({"/available", "/active"}) // 支援多種可用場次查詢路徑
     public ResponseEntity<List<Schedule>> getAvailableSchedules() {
         return ResponseEntity.ok(scheduleService.findAvailableSchedules());
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/movie/{movieId}/available")
+    @GetMapping({"/movie/{movieId}/available", "/film/{movieId}/active"}) // 支援多種可用電影場次查詢路徑
     public ResponseEntity<List<Schedule>> getAvailableSchedulesByMovie(@PathVariable Long movieId) {
         return ResponseEntity.ok(scheduleService.findAvailableSchedulesByMovie(movieId));
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/date-range")
+    @GetMapping({"/date-range", "/period"}) // 支援多種日期範圍查詢路徑
     public ResponseEntity<List<Schedule>> getSchedulesByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
         return ResponseEntity.ok(scheduleService.findByDateRange(startTime, endTime));
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/movie/{movieId}/date-range")
+    @GetMapping({"/movie/{movieId}/date-range", "/film/{movieId}/period"}) // 支援多種電影日期範圍查詢路徑
     public ResponseEntity<List<Schedule>> getSchedulesByMovieAndDateRange(
             @PathVariable Long movieId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
@@ -66,8 +59,7 @@ public class ScheduleController {
         return ResponseEntity.ok(scheduleService.findByMovieIdAndDateRange(movieId, startTime, endTime));
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/hall/{hall}/date-range")
+    @GetMapping({"/hall/{hall}/date-range", "/theater/{hall}/period"}) // 支援多種影廳日期範圍查詢路徑
     public ResponseEntity<List<Schedule>> getSchedulesByHallAndDateRange(
             @PathVariable String hall,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
@@ -75,17 +67,15 @@ public class ScheduleController {
         return ResponseEntity.ok(scheduleService.findByHallAndDateRange(hall, startTime, endTime));
     }
 
-    // 保留 @PreAuthorize，因為這是修改操作
     @PreAuthorize("hasRole('USER')")
-    @PostMapping("/update-seats/{id}")
+    @PostMapping({"/update-seats/{id}", "/book-seats/{id}"}) // 支援多種座位更新路徑
     public ResponseEntity<Schedule> updateAvailableSeats(
             @PathVariable Long id,
             @RequestParam int seatsToBook) {
         return ResponseEntity.ok(scheduleService.updateAvailableSeats(id, seatsToBook));
     }
 
-    // 移除 @PreAuthorize，允許公開訪問
-    @GetMapping("/count/movie/{movieId}/date-range")
+    @GetMapping({"/count/movie/{movieId}/date-range", "/count/film/{movieId}/period"}) // 支援多種計數查詢路徑
     public ResponseEntity<Long> countSchedulesByMovieAndDateRange(
             @PathVariable Long movieId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
