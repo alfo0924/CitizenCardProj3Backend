@@ -36,6 +36,23 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        // Schedule相關端點的特殊CORS配置 - 必須放在一般配置之前
+        registry.addMapping("/api/schedules/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "HEAD", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("*")
+                .allowCredentials(false)  // 對於允許所有來源的配置，必須設為false
+                .maxAge(maxAge);
+
+        registry.addMapping("/api/schedule/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "HEAD", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("*")
+                .allowCredentials(false)
+                .maxAge(maxAge);
+
         // 一般API的CORS配置
         registry.addMapping("/api/**")
                 .allowedOrigins(allowedOrigins.split(","))
@@ -43,13 +60,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders(allowedHeaders)
                 .exposedHeaders(exposedHeaders)
                 .allowCredentials(allowCredentials)
-                .maxAge(maxAge);
-
-        // Schedule相關端點的特殊CORS配置
-        registry.addMapping("/api/schedules/**")
-                .allowedOrigins("*")  // 允許所有來源
-                .allowedMethods("GET", "OPTIONS")  // 只允許GET和OPTIONS方法
-                .allowedHeaders("*")  // 允許所有headers
                 .maxAge(maxAge);
     }
 
