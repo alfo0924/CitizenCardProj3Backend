@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example._citizencard3.dto.response.DashboardStatsResponse;
 import org.example._citizencard3.exception.CustomException;
+import org.example._citizencard3.model.MovieTicket;
 import org.example._citizencard3.repository.*;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
@@ -82,7 +83,7 @@ public class SystemService {
                     .totalBalance(getDoubleSafely(() -> walletRepository.sumBalance(), "總餘額"))
                     .averageBalance(getDoubleSafely(() -> walletRepository.averageBalance(), "平均餘額"))
                     .totalTickets(getCountSafely(() -> movieTicketRepository.count(), "總票券數"))
-                    .validTickets(getCountSafely(() -> movieTicketRepository.countByStatusEquals("VALID"), "有效票券數"))
+                    .validTickets(getCountSafely(() -> movieTicketRepository.countByStatusEquals(MovieTicket.TicketStatus.valueOf("VALID")), "有效票券數"))
                     .ticketsSoldToday(getCountSafely(() -> movieTicketRepository.countByCreatedAtAfter(startOfDay), "今日售票數"))
                     .totalCoupons(getCountSafely(() -> discountCouponRepository.count(), "總優惠券數"))
                     .activeCoupons(getCountSafely(() -> discountCouponRepository.countByStatusEquals("VALID"), "有效優惠券數"))

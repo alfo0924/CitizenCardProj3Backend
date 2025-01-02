@@ -84,7 +84,7 @@ public class WalletService {
     public Page<MovieTicket> getValidMovieTickets(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("找不到用戶", HttpStatus.NOT_FOUND));
-        return movieTicketRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, "VALID", pageable);
+        return movieTicketRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, MovieTicket.TicketStatus.valueOf("VALID"), pageable);
     }
 
     public Page<DiscountCoupon> getValidDiscountCoupons(Long userId, Pageable pageable) {
