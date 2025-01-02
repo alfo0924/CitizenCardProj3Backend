@@ -35,6 +35,14 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
 
+    private static final String[] PUBLIC_URLS = {
+            "/auth/login",
+            "/auth/register",
+            "/auth/verify-token",
+            "/auth/password-reset",
+            "/auth/password-reset-confirm"
+    };
+
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
@@ -61,51 +69,33 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 基本公開訪問端點
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Schedule相關的公開端點 - 複數形式
-                        .requestMatchers("/api/schedules/**").permitAll()
-                        .requestMatchers("/api/schedules").permitAll()
-                        .requestMatchers("/api/schedules/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/movie/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/available").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/date-range").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/hall/**").permitAll()
+                        // Schedule endpoints
+                        .requestMatchers("/api/schedules/**", "/api/schedule/**",
+                                "/schedules/**", "/schedule/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/movie/**",
+                                "/api/schedules/available",
+                                "/api/schedules/date-range",
+                                "/api/schedules/hall/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedule/movie/**",
+                                "/api/schedule/available",
+                                "/api/schedule/date-range",
+                                "/api/schedule/hall/**").permitAll()
 
-                        // Schedule相關的公開端點 - 單數形式
-                        .requestMatchers("/api/schedule/**").permitAll()
-                        .requestMatchers("/api/schedule").permitAll()
-                        .requestMatchers("/api/schedule/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedule/movie/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedule/available").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedule/date-range").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedule/hall/**").permitAll()
+                        // Other public endpoints
+                        .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**").permitAll()
 
-                        // 無API前綴的Schedule端點 - 複數形式
-                        .requestMatchers("/schedules/**").permitAll()
-                        .requestMatchers("/schedules").permitAll()
-                        .requestMatchers("/schedules/{id}").permitAll()
-
-                        // 無API前綴的Schedule端點 - 單數形式
-                        .requestMatchers("/schedule/**").permitAll()
-                        .requestMatchers("/schedule").permitAll()
-                        .requestMatchers("/schedule/{id}").permitAll()
-
-                        // 其他公開端點
-                        .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/stores/**").permitAll()
-
-                        // 需要認證的端點
+                        // Authenticated endpoints
                         .requestMatchers("/users/**", "/wallets/**", "/movie-tickets/**",
                                 "/movie-ticket-qrcodes/**", "/discount-coupons/**",
                                 "/discount-coupon-qrcodes/**").authenticated()
 
-                        // 管理員專用端點
+                        // Admin endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                        // 其他所有請求都需要認證
+                        // Default policy
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)

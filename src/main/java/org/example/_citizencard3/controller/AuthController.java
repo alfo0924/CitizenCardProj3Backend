@@ -151,6 +151,56 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/verify-token")
+    public ResponseEntity<Map<String, Object>> verifyToken(
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of(
+                                "valid", false,
+                                "message", "無效的認證令牌",
+                                "status", HttpStatus.UNAUTHORIZED.value()
+                        ));
+            }
+
+            String jwtToken = token.substring(7);
+            boolean isValid = authService.verifyToken(jwtToken);
+
+            if (isValid) {
+                UserResponse userResponse = authService.getProfile(jwtToken);
+                Map<String, Object> result = new HashMap<>();
+                result.put("valid", true);
+                result.put("user", userResponse);
+                result.put("status", HttpStatus.OK.value());
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of(
+                                "valid", false,
+                                "message", "認證令牌已過期或無效",
+                                "status", HttpStatus.UNAUTHORIZED.value()
+                        ));
+            }
+        } catch (CustomException e) {
+            log.error("Token verification failed: {}", e.getMessage());
+            return ResponseEntity.status(e.getStatus())
+                    .body(Map.of(
+                            "valid", false,
+                            "message", e.getMessage(),
+                            "status", e.getStatus().value()
+                    ));
+        } catch (Exception e) {
+            log.error("Token verification failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "valid", false,
+                            "message", "令牌驗證失敗",
+                            "status", HttpStatus.INTERNAL_SERVER_ERROR.value()
+                    ));
+        }
+    }
+
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
         Map<String, Object> response = new HashMap<>();
