@@ -34,7 +34,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // API端點的CORS配置
+        // API endpoints CORS configuration
         registry.addMapping("/api/**")
                 .allowedOrigins(allowedOrigins.split(","))
                 .allowedMethods(allowedMethods)
@@ -43,7 +43,16 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(allowCredentials)
                 .maxAge(maxAge);
 
-        // 公開資源的CORS配置
+        // Auth endpoints specific CORS configuration
+        registry.addMapping("/auth/**")
+                .allowedOrigins(allowedOrigins.split(","))
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("Authorization", "Content-Type", "X-Requested-With")
+                .exposedHeaders("Authorization")
+                .allowCredentials(true)
+                .maxAge(3600);
+
+        // Public resources CORS configuration
         registry.addMapping("/public/**")
                 .allowedOrigins("*")
                 .allowedMethods("GET", "HEAD", "OPTIONS")
@@ -53,41 +62,48 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // API資源
+        // API resources
         registry.addResourceHandler("/api/**")
                 .addResourceLocations("classpath:/api/")
                 .setCacheControl(CacheControl.noCache())
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // 靜態資源
+        // Auth resources
+        registry.addResourceHandler("/auth/**")
+                .addResourceLocations("classpath:/auth/")
+                .setCacheControl(CacheControl.noCache())
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
+
+        // Static resources
         registry.addResourceHandler("/static/**", "/assets/**")
                 .addResourceLocations("classpath:/static/", "classpath:/assets/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // 公共資源
+        // Public resources
         registry.addResourceHandler("/public/**")
                 .addResourceLocations("classpath:/public/")
                 .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS))
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // 上傳文件
+        // Uploaded files
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // Swagger文檔
+        // Swagger documentation
         registry.addResourceHandler("/swagger-ui/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/")
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver());
 
-        // 錯誤頁面
+        // Error pages
         registry.addResourceHandler("/error/**")
                 .addResourceLocations("classpath:/error/")
                 .setCacheControl(CacheControl.noCache())
@@ -97,12 +113,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // SPA路由
+        // SPA routes
         String[] spaRoutes = {
                 "/",
                 "/login",
                 "/register",
                 "/profile",
+                "/verify-token",
                 "/movies/**",
                 "/schedules/**",
                 "/tickets/**",

@@ -206,4 +206,28 @@ public class AuthService {
         }
     }
 
+    public boolean verifyToken(String jwtToken) {
+        try {
+            if (jwtToken == null || jwtToken.isEmpty()) {
+                return false;
+            }
+
+            String email = jwtTokenProvider.getEmailFromToken(jwtToken);
+            if (email == null || email.isEmpty()) {
+                return false;
+            }
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new CustomException("用戶不存在", HttpStatus.NOT_FOUND));
+
+            if (!user.isActive()) {
+                throw new CustomException("帳戶已被停用", HttpStatus.FORBIDDEN);
+            }
+
+            return jwtTokenProvider.validateToken(jwtToken);
+        } catch (Exception e) {
+            log.error("Token verification failed: {}", e.getMessage());
+            return false;
+        }
+    }
 }
