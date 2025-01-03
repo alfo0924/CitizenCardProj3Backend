@@ -60,6 +60,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/discounts/public/**"
     );
 
+    private final List<String> ADMIN_PATHS = Arrays.asList(
+            "/api/admin/**",
+            "/admin/**",
+            "/api/system/**",
+            "/api/movies/management/**",
+            "/api/stores/management/**"
+    );
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -68,13 +76,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String path = request.getRequestURI();
             log.debug("Processing {} request for path: {}", request.getMethod(), path);
 
-            if (!isPublicPath(request)) {
-                String token = getJwtFromRequest(request);
-                if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-                    processValidToken(request, token);
-                } else {
-                    log.debug("No valid JWT token found for path: {}", path);
-                }
+            if (isAdminPath(path)) {
+                handleAdminRequest(request, response);
+            } else if (!isPublicPath(request)) {
+                handleProtectedRequest(request);
             } else {
                 log.debug("Public access granted for path: {}", path);
             }
@@ -87,7 +92,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void processValidToken(HttpServletRequest request, String jwt) {
+    private void handleAdminRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String token = getJwtFromRequest(request);
+        if (!StringUtils.hasText(token) || !jwtTokenProvider.validateToken(token)) {
+            throw new RuntimeException("無效的管理員認證");
+        }
+
+        UserDetails userDetails = processValidToken(request, token);
+        if (!userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            throw new RuntimeException("需要管理員權限");
+        }
+    }
+
+    private void handleProtectedRequest(HttpServletRequest request) {
+        String token = getJwtFromRequest(request);
+        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+            processValidToken(request, token);
+        } else {
+            log.debug("No valid JWT token found for protected path");
+        }
+    }
+
+    private UserDetails processValidToken(HttpServletRequest request, String jwt) {
         try {
             String email = jwtTokenProvider.getEmailFromToken(jwt);
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
@@ -98,6 +125,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("User authenticated successfully: {}", email);
+                return userDetails;
             } else {
                 log.warn("User not found or disabled: {}", email);
                 throw new RuntimeException("使用者不存在或已被停用");
@@ -112,7 +140,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.clearContext();
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"error\":\"認證失敗\",\"message\":\"" + e.getMessage() + "\"}");
+        response.getWriter().write("{\"error\":\"認證失敗\",\"message\":\"" + e.getMessage() + "\",\"timestamp\":\"" +
+                java.time.LocalDateTime.now() + "\"}");
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
@@ -143,8 +172,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         log.debug(isPublic ? "Public access granted for path: {}" : "Protected path access attempt: {}", finalPath);
-
         return isPublic;
+    }
+
+    private boolean isAdminPath(String path) {
+        return ADMIN_PATHS.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
     @Override

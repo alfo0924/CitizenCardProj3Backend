@@ -41,13 +41,19 @@ public class SecurityConfig {
             "/auth/register",
             "/auth/verify-token",
             "/auth/password-reset",
-            "/auth/password-reset-confirm"
+            "/auth/password-reset-confirm",
+            "/api/public/**",
+            "/error"
     };
 
-    // 管理員端點定義
+    // 管理員端點定義 - 更新包含所有管理員相關路徑
     private static final String[] ADMIN_URLS = {
             "/api/system/**",
             "/admin/**",
+            "/api/admin/**",
+            "/api/movies/management/**",
+            "/api/stores/management/**",
+            "/api/users/management/**",
             "/api/system/dashboard",
             "/api/system/status",
             "/api/system/distributions",
@@ -64,6 +70,12 @@ public class SecurityConfig {
 
     // 需要認證的端點定義
     private static final String[] AUTHENTICATED_URLS = {
+            "/api/users/**",
+            "/api/wallets/**",
+            "/api/movie-tickets/**",
+            "/api/movie-ticket-qrcodes/**",
+            "/api/discount-coupons/**",
+            "/api/discount-coupon-qrcodes/**",
             "/users/**",
             "/wallets/**",
             "/movie-tickets/**",
@@ -93,14 +105,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 禁用 CSRF
                 .csrf(AbstractHttpConfigurer::disable)
-                // 配置 CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // 配置 Session 管理
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 配置請求授權
                 .authorizeHttpRequests(auth -> auth
                         // 公開端點
                         .requestMatchers(PUBLIC_URLS).permitAll()
@@ -108,30 +116,25 @@ public class SecurityConfig {
 
                         // Schedule 相關端點
                         .requestMatchers(SCHEDULE_PUBLIC_URLS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/movie/**",
-                                "/api/schedules/available",
-                                "/api/schedules/date-range",
-                                "/api/schedules/hall/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedule/movie/**",
-                                "/api/schedule/available",
-                                "/api/schedule/date-range",
-                                "/api/schedule/hall/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/schedule/**").permitAll()
 
                         // 公開的電影和商店信息
+                        .requestMatchers(HttpMethod.GET, "/api/movies/**", "/api/stores/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**").permitAll()
 
                         // 需要認證的端點
                         .requestMatchers(AUTHENTICATED_URLS).authenticated()
 
-                        // 管理員端點
+                        // 管理員端點 - 明確指定需要 ADMIN 角色
                         .requestMatchers(ADMIN_URLS).hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         // 默認策略
                         .anyRequest().authenticated()
                 )
-                // 添加 JWT 過濾器
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                // 配置異常處理
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
