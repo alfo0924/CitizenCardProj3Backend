@@ -35,12 +35,41 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
 
+    // 公開端點定義
     private static final String[] PUBLIC_URLS = {
             "/auth/login",
             "/auth/register",
             "/auth/verify-token",
             "/auth/password-reset",
             "/auth/password-reset-confirm"
+    };
+
+    // 管理員端點定義
+    private static final String[] ADMIN_URLS = {
+            "/api/system/**",
+            "/admin/**",
+            "/api/system/dashboard",
+            "/api/system/status",
+            "/api/system/distributions",
+            "/api/system/cache/**"
+    };
+
+    // Schedule 相關端點定義
+    private static final String[] SCHEDULE_PUBLIC_URLS = {
+            "/api/schedules/**",
+            "/api/schedule/**",
+            "/schedules/**",
+            "/schedule/**"
+    };
+
+    // 需要認證的端點定義
+    private static final String[] AUTHENTICATED_URLS = {
+            "/users/**",
+            "/wallets/**",
+            "/movie-tickets/**",
+            "/movie-ticket-qrcodes/**",
+            "/discount-coupons/**",
+            "/discount-coupon-qrcodes/**"
     };
 
     @Value("${app.cors.allowed-origins}")
@@ -64,17 +93,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // 禁用 CSRF
                 .csrf(AbstractHttpConfigurer::disable)
+                // 配置 CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // 配置 Session 管理
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 配置請求授權
                 .authorizeHttpRequests(auth -> auth
+                        // 公開端點
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Schedule endpoints
-                        .requestMatchers("/api/schedules/**", "/api/schedule/**",
-                                "/schedules/**", "/schedule/**").permitAll()
+                        // Schedule 相關端點
+                        .requestMatchers(SCHEDULE_PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/schedules/movie/**",
                                 "/api/schedules/available",
                                 "/api/schedules/date-range",
@@ -84,31 +117,33 @@ public class SecurityConfig {
                                 "/api/schedule/date-range",
                                 "/api/schedule/hall/**").permitAll()
 
-                        // Other public endpoints
+                        // 公開的電影和商店信息
                         .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**").permitAll()
 
-                        // Authenticated endpoints
-                        .requestMatchers("/users/**", "/wallets/**", "/movie-tickets/**",
-                                "/movie-ticket-qrcodes/**", "/discount-coupons/**",
-                                "/discount-coupon-qrcodes/**").authenticated()
+                        // 需要認證的端點
+                        .requestMatchers(AUTHENTICATED_URLS).authenticated()
 
-                        // Admin endpoints
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // 管理員端點
+                        .requestMatchers(ADMIN_URLS).hasRole("ADMIN")
 
-                        // Default policy
+                        // 默認策略
                         .anyRequest().authenticated()
                 )
+                // 添加 JWT 過濾器
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                // 配置異常處理
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\":\"未授權\",\"message\":\"請先登入\"}");
+                            response.getWriter().write("{\"error\":\"未授權\",\"message\":\"請先登入\",\"timestamp\":\"" +
+                                    java.time.LocalDateTime.now() + "\"}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(403);
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\":\"存取被拒絕\",\"message\":\"權限不足\"}");
+                            response.getWriter().write("{\"error\":\"存取被拒絕\",\"message\":\"權限不足\",\"timestamp\":\"" +
+                                    java.time.LocalDateTime.now() + "\"}");
                         })
                 );
 

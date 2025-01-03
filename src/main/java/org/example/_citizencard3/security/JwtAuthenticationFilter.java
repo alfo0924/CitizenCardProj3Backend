@@ -34,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/error",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/system/**",
             "/api/schedules",
             "/api/schedule",
             "/api/schedules/**",
@@ -62,58 +61,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     );
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         try {
             String path = request.getRequestURI();
-            String method = request.getMethod();
-            log.debug("Processing {} request for path: {}", method, path);
+            log.debug("Processing {} request for path: {}", request.getMethod(), path);
 
-            // Handle OPTIONS requests and public paths
-            if ("OPTIONS".equalsIgnoreCase(method) || isPublicPath(request)) {
-                log.debug("Allowing public access for: {}", path);
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            String jwt = getJwtFromRequest(request);
-            if (StringUtils.hasText(jwt)) {
-                if (jwtTokenProvider.validateToken(jwt)) {
-                    processValidToken(request, jwt);
+            if (!isPublicPath(request)) {
+                String token = getJwtFromRequest(request);
+                if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+                    processValidToken(request, token);
                 } else {
-                    log.warn("Invalid JWT token");
-                    handleAuthenticationError(response, new RuntimeException("Invalid JWT token"));
-                    return;
+                    log.debug("No valid JWT token found for path: {}", path);
                 }
-            } else if (!isPublicPath(request)) {
-                log.debug("Protected path requires authentication: {}", path);
-                handleAuthenticationError(response, new RuntimeException("Authentication required"));
-                return;
+            } else {
+                log.debug("Public access granted for path: {}", path);
             }
-
-            filterChain.doFilter(request, response);
-        } catch (Exception e) {
-            log.error("JWT authentication failed: {}", e.getMessage());
-            handleAuthenticationError(response, e);
+        } catch (Exception ex) {
+            log.error("JWT Authentication error", ex);
+            handleAuthenticationError(response, ex);
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private void processValidToken(HttpServletRequest request, String jwt) {
-        String email = jwtTokenProvider.getEmailFromToken(jwt);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        try {
+            String email = jwtTokenProvider.getEmailFromToken(jwt);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-        if (userDetails != null && userDetails.isEnabled()) {
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("User authenticated successfully: {}", email);
-        } else {
-            log.warn("User not found or disabled: {}", email);
-            throw new RuntimeException("User not found or disabled");
+            if (userDetails != null && userDetails.isEnabled()) {
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("User authenticated successfully: {}", email);
+            } else {
+                log.warn("User not found or disabled: {}", email);
+                throw new RuntimeException("使用者不存在或已被停用");
+            }
+        } catch (Exception e) {
+            log.error("處理 JWT Token 時發生錯誤", e);
+            throw new RuntimeException("處理認證時發生錯誤");
         }
     }
 
@@ -151,8 +142,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .anyMatch(pattern -> pathMatcher.match(pattern, finalPath));
         }
 
-        log.debug(isPublic ? "Public access granted for path: {}" : "Protected path access attempt: {}", path);
+        log.debug(isPublic ? "Public access granted for path: {}" : "Protected path access attempt: {}", finalPath);
 
         return isPublic;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/public/") ||
+                path.equals("/error") ||
+                path.startsWith("/swagger-ui/") ||
+                path.startsWith("/v3/api-docs/");
     }
 }
