@@ -116,8 +116,8 @@ public class SecurityConfig {
 
                         // Schedule 相關端點
                         .requestMatchers(SCHEDULE_PUBLIC_URLS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/schedule/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
 
                         // 公開的電影和商店信息
                         .requestMatchers(HttpMethod.GET, "/api/movies/**", "/api/stores/**").permitAll()
