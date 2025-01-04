@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
+//http://localhost:8080/api/movies 目前還是要以http://localhost:8080/api/為前綴
 @RestController
 @RequestMapping("/movies")  // 移除/api前綴，因為已經在application.properties中設置了
 @RequiredArgsConstructor
