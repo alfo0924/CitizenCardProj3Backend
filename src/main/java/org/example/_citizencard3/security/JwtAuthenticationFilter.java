@@ -34,14 +34,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/error",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/api/schedules",
-            "/api/schedule",
-            "/api/schedules/**",
-            "/api/schedule/**",
-            "/schedules",
-            "/schedule",
+//            "/schedules",
+//            "/schedule",
             "/schedules/**",
             "/schedule/**"
+//            "/schedules",
+//            "/schedule"
     );
 
     private final List<String> PUBLIC_GET_PATHS = Arrays.asList(
@@ -49,14 +47,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/stores/**",
             "/api/movies/**",
             "/api/stores/**",
-            "/schedules",
-            "/schedule",
-            "/schedules/**",
-            "/schedule/**",
-            "/api/schedules",
-            "/api/schedule",
-            "/api/schedules/**",
-            "/api/schedule/**",
             "/discounts/public/**"
     );
 
