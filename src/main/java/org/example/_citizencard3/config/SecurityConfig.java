@@ -62,10 +62,9 @@ public class SecurityConfig {
 
     // Schedule 相關端點定義
     private static final String[] SCHEDULE_PUBLIC_URLS = {
-            "/api/schedules/**",
-            "/api/schedule/**",
             "/schedules/**",
-            "/schedule/**"
+            "/schedule/**",
+            "/seats/**"
     };
 
     // 需要認證的端點定義
@@ -79,6 +78,7 @@ public class SecurityConfig {
             "/users/**",
             "/wallets/**",
             "/movie-tickets/**",
+            "/movietickets/**",
             "/movie-ticket-qrcodes/**",
             "/discount-coupons/**",
             "/discount-coupon-qrcodes/**"
@@ -118,6 +118,7 @@ public class SecurityConfig {
                         .requestMatchers(SCHEDULE_PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
+
 
                         // 公開的電影和商店信息
                         .requestMatchers(HttpMethod.GET, "/api/movies/**", "/api/stores/**").permitAll()
