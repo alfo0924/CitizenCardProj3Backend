@@ -35,7 +35,6 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
 
-    // 公開端點定義
     private static final String[] PUBLIC_URLS = {
             "/auth/login",
             "/auth/register",
@@ -43,10 +42,11 @@ public class SecurityConfig {
             "/auth/password-reset",
             "/auth/password-reset-confirm",
             "/api/public/**",
-            "/error"
+            "/error",
+            "/api/images/**",
+            "/images/**"
     };
 
-    // 管理員端點定義 - 更新包含所有管理員相關路徑
     private static final String[] ADMIN_URLS = {
             "/api/system/**",
             "/admin/**",
@@ -60,7 +60,6 @@ public class SecurityConfig {
             "/api/system/cache/**"
     };
 
-    // Schedule 相關端點定義
     private static final String[] SCHEDULE_PUBLIC_URLS = {
             "/api/schedules/**",
             "/api/schedule/**",
@@ -68,7 +67,6 @@ public class SecurityConfig {
             "/schedule/**"
     };
 
-    // 需要認證的端點定義
     private static final String[] AUTHENTICATED_URLS = {
             "/api/users/**",
             "/api/wallets/**",
@@ -110,30 +108,18 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 公開端點
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Schedule 相關端點
                         .requestMatchers(SCHEDULE_PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
-
-                        // 公開的電影和商店信息
                         .requestMatchers(HttpMethod.GET, "/api/movies/**", "/api/stores/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/movies/**", "/stores/**").permitAll()
-
-                        // 需要認證的端點
                         .requestMatchers(AUTHENTICATED_URLS).authenticated()
-
-                        // 管理員端點 - 明確指定需要 ADMIN 角色
                         .requestMatchers(ADMIN_URLS).hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-
-                        // 默認策略
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -147,8 +133,7 @@ public class SecurityConfig {
                             response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"error\":\"存取被拒絕\",\"message\":\"權限不足\",\"timestamp\":\"" +
                                     java.time.LocalDateTime.now() + "\"}");
-                        })
-                );
+                        }));
 
         return http.build();
     }

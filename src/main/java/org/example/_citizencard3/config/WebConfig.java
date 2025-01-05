@@ -69,6 +69,19 @@ public class WebConfig implements WebMvcConfigurer {
 //                .setCacheControl(CacheControl.noCache())
 //                .resourceChain(true)
 //                .addResolver(new PathResourceResolver());
+    registry.addResourceHandler("/api/images/**", "/images/**")
+            .addResourceLocations("file:C:/Users/user/IdeaProjects/CitiZenCard3.1/src/main/resources/static/images/")
+            .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
+    registry.addResourceHandler("/api/images/**")
+            .addResourceLocations("classpath:/static/images/")
+            .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
+    registry.addResourceHandler("/api/images/**")
+            .addResourceLocations("file:C:/Users/user/IdeaProjects/CitiZenCard3.1/src/main/resources/static/images/")
+            .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
+
+    registry.addResourceHandler("/images/**")
+            .addResourceLocations("classpath:/static/images/")
+            .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
 
     // Auth resources
     registry.addResourceHandler("/auth/**")
@@ -93,10 +106,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     // Uploaded files
     registry.addResourceHandler("/uploads/**")
-        .addResourceLocations("file:uploads/")
-        .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
-        .resourceChain(true)
-        .addResolver(new PathResourceResolver());
+            .addResourceLocations("file:uploads/", "file:uploads/images/")
+            .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
+            .resourceChain(true)
+            .addResolver(new PathResourceResolver());
 
     // Swagger documentation
     registry.addResourceHandler("/swagger-ui/**")
@@ -110,6 +123,12 @@ public class WebConfig implements WebMvcConfigurer {
         .setCacheControl(CacheControl.noCache())
         .resourceChain(true)
         .addResolver(new PathResourceResolver());
+    // 新增臨時文件存儲
+    registry.addResourceHandler("/temp/**")
+            .addResourceLocations("file:temp/")
+            .setCacheControl(CacheControl.noStore())
+            .resourceChain(true)
+            .addResolver(new PathResourceResolver());
   }
 
   @Override
