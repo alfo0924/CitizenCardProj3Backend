@@ -187,33 +187,51 @@ public class MovieService {
     public MovieResponse updateMovie(Long id, MovieRequest request) {
         try {
             Movie movie = findMovieById(id);
-            validateMovieRequest(request);
 
-            movie.setTitle(request.getTitle());
-            movie.setDescription(request.getDescription());
-            movie.setDirector(request.getDirector());
-            movie.setCast(request.getCast());
-            movie.setDuration(request.getDuration());
-            movie.setGenre(request.getGenre());
-            movie.setRating(request.getRating());
-            movie.setPosterUrl(request.getPosterUrl());
-            movie.setTrailerUrl(request.getTrailerUrl());
-
-            // 只在有新值時更新日期
+            // 只在請求中包含值時才更新
+            if (request.getTitle() != null) {
+                movie.setTitle(request.getTitle());
+            }
+            if (request.getDescription() != null) {
+                movie.setDescription(request.getDescription());
+            }
+            if (request.getDirector() != null) {
+                movie.setDirector(request.getDirector());
+            }
+            if (request.getCast() != null) {
+                movie.setCast(request.getCast());
+            }
+            if (request.getDuration() != null) {
+                movie.setDuration(request.getDuration());
+            }
+            if (request.getGenre() != null) {
+                movie.setGenre(request.getGenre());
+            }
+            if (request.getRating() != null) {
+                movie.setRating(request.getRating());
+            }
+            if (request.getPosterUrl() != null) {
+                movie.setPosterUrl(request.getPosterUrl());
+            }
+            if (request.getTrailerUrl() != null) {
+                movie.setTrailerUrl(request.getTrailerUrl());
+            }
             if (request.getReleaseDate() != null) {
                 movie.setReleaseDate(request.getReleaseDate());
             }
             if (request.getEndDate() != null) {
                 movie.setEndDate(request.getEndDate());
             }
+            if (request.getIsShowing() != null) {
+                movie.setIsShowing(request.getIsShowing());
+            }
+            if (request.getPrice() != null) {
+                movie.setPrice(request.getPrice());
+            }
 
-            movie.setIsShowing(request.getIsShowing());
-            movie.setPrice(request.getPrice());
             movie.setUpdatedAt(LocalDateTime.now());
 
             return convertToResponse(movieRepository.save(movie));
-        } catch (CustomException e) {
-            throw e;
         } catch (Exception e) {
             log.error("Error updating movie:", e);
             throw new CustomException("更新電影失敗", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -298,23 +316,22 @@ public class MovieService {
     }
 
     private void validateMovieRequest(MovieRequest request) {
-        // 修改驗證邏輯，允許票價為0
-        if (request.getReleaseDate() == null || request.getEndDate() == null) {
-            throw new CustomException("上映日期和下檔日期不能為空", HttpStatus.BAD_REQUEST);
+        // 只在更新日期時進行驗證
+        if (request.getReleaseDate() != null && request.getEndDate() != null) {
+            if (request.getReleaseDate().isAfter(request.getEndDate())) {
+                throw new CustomException("上映日期不能晚於下檔日期", HttpStatus.BAD_REQUEST);
+            }
         }
 
-        if (request.getReleaseDate().isAfter(request.getEndDate())) {
-            throw new CustomException("上映日期不能晚於下檔日期", HttpStatus.BAD_REQUEST);
-        }
-
-        if (request.getPrice() < 0) {
+        if (request.getPrice() != null && request.getPrice() < 0) {
             throw new CustomException("票價不能小於0", HttpStatus.BAD_REQUEST);
         }
 
-        if (request.getDuration() <= 0) {
+        if (request.getDuration() != null && request.getDuration() <= 0) {
             throw new CustomException("片長必須大於0", HttpStatus.BAD_REQUEST);
         }
     }
+
 
 
     private MovieResponse convertToResponse(Movie movie) {
