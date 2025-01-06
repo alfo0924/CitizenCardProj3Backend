@@ -54,6 +54,7 @@ public class SecurityConfig {
             "/api/movies/management/**",
             "/api/stores/management/**",
             "/api/users/management/**",
+            "/api/users/**",
             "/api/system/dashboard",
             "/api/system/status",
             "/api/system/distributions",
