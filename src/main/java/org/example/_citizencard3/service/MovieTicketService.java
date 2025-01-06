@@ -56,7 +56,7 @@ public class MovieTicketService {
   }
 
   public List<MovieTicketResponse> getUserTickets(Long userId) {
-    return movieTicketRepository.findByUserId(userId)
+    return movieTicketRepository.findByUserIdWithDetails(userId)
         .stream()
         .map(movieTicketMapper::toResponse)
         .collect(Collectors.toList());
@@ -72,5 +72,38 @@ public class MovieTicketService {
     if (movieTicketRepository.isSeatBooked(scheduleId, seatNumber)) {
       throw new RuntimeException("該座位已被訂購");
     }
+  }
+
+  //QRCode取得電影票資訊
+  public MovieTicket getTicketById(Long ticketId) {
+    return movieTicketRepository.findByIdWithDetails(ticketId)
+        .orElseThrow(() -> new RuntimeException("找不到電影票：" + ticketId));
+  }
+
+  //取消電影票訂票
+  @Transactional
+  public MovieTicketResponse cancelTicket(Long userId, Long ticketId) {
+    // 1. 先找到電影票
+    MovieTicket ticket = movieTicketRepository.findByIdWithDetails(ticketId)
+        .orElseThrow(() -> new RuntimeException("找不到電影票：" + ticketId));
+
+    // 2. 確認是否為該用戶的票
+    if (!userId.equals(ticket.getUserId())) {
+      throw new RuntimeException("無權限取消此票券");
+    }
+
+    // 3. 檢查票券狀態
+    if (!ticket.isValid()) {
+      throw new RuntimeException("票券狀態不允許取消");
+    }
+
+    // 4. 檢查放映時間
+    if (ticket.getSchedule().getShowTime().isBefore(LocalDateTime.now())) {
+      throw new RuntimeException("已過放映時間，無法取消");
+    }
+
+    // 5. 執行取消
+    ticket.cancel();
+    return movieTicketMapper.toResponse(movieTicketRepository.save(ticket));
   }
 }

@@ -16,7 +16,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/system")
+@RequestMapping("/system")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${app.cors.allowed-origins}",
         allowCredentials = "true",

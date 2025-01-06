@@ -1,5 +1,6 @@
 package org.example._citizencard3.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,6 +45,7 @@ public class MovieTicketQRCode {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JsonIgnoreProperties("movieTicket")
     private MovieTicket movieTicket;
 
     @PrePersist

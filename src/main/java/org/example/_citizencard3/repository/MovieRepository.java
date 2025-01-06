@@ -1,6 +1,7 @@
 package org.example._citizencard3.repository;
 
 import org.example._citizencard3.model.Movie;
+import org.example._citizencard3.model.MovieTicket;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -86,13 +87,17 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
      */
     long countByCreatedAtAfterAndActiveTrue(LocalDateTime oneMonthAgo);
 
-
-    // ... (previous methods remain unchanged)
-
     /**
      * 計算每個電影類型的活躍電影數量
      * @return 包含每個電影類型及其對應的活躍電影數量的Map
      */
-    @Query("SELECT m.genre, COUNT(m) FROM Movie m WHERE m.active = true GROUP BY m.genre")
-    Map<String, Long> countByGenre();
+    @Query("SELECT m.genre as genre, COUNT(m.id) as count FROM Movie m WHERE m.active = true GROUP BY m.genre")
+    List<GenreCount> countGroupByGenre();
+
+    public interface GenreCount {
+        String getGenre();
+        Long getCount();
+    }
+
+
 }

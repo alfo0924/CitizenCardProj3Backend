@@ -124,4 +124,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByActive(Boolean active, Pageable pageable);
 
 
+    @Query("SELECT u.role as role, COUNT(u.id) as count FROM User u GROUP BY u.role")
+    List<RoleCount> countGroupByRole();
+
+    public interface RoleCount {
+        String getRole();
+        Long getCount();
+    }
+
 }

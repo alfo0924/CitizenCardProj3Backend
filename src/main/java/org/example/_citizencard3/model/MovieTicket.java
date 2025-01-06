@@ -1,5 +1,6 @@
 package org.example._citizencard3.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,6 +52,7 @@ public class MovieTicket {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "movieTicket", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("movieTicket")
     private List<MovieTicketQRCode> qrCodes = new ArrayList<>();
 
     public enum TicketStatus {

@@ -84,4 +84,8 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
      */
     @Query("SELECT s.category, COUNT(s) FROM Store s WHERE s.active = true GROUP BY s.category")
     Map<String, Long> countByCategory();
+    @Query("SELECT s.category, COUNT(s.id) FROM Store s WHERE s.active = true GROUP BY s.category")
+    List<Object[]> countGroupByCategory();
+
+
 }

@@ -39,4 +39,11 @@ public interface DiscountCouponRepository extends JpaRepository<DiscountCoupon, 
      */
     long countByStatusEqualsAndUpdatedAtAfter(String status, LocalDateTime dateTime);
 
+
+
+
+    Long countByStatus(DiscountCoupon.CouponStatus status);
+    Long countByStatusAndUpdatedAtAfter(DiscountCoupon.CouponStatus status, LocalDateTime date);
+
+
 }
