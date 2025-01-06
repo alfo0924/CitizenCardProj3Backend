@@ -74,6 +74,12 @@ public class MovieTicketService {
     }
   }
 
+  //QRCode取得電影票資訊
+  public MovieTicket getTicketById(Long ticketId) {
+    return movieTicketRepository.findByIdWithDetails(ticketId)
+        .orElseThrow(() -> new RuntimeException("找不到電影票：" + ticketId));
+  }
+
   //取消電影票訂票
   @Transactional
   public MovieTicketResponse cancelTicket(Long userId, Long ticketId) {

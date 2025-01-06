@@ -40,17 +40,20 @@ public class QRCodeService {
     @Transactional
     public MovieTicketQRCode generateMovieTicketQRCode(Long ticketId, LocalDateTime validUntil) {
         String qrCodeData = generateQRCodeData("TIX", ticketId);
-        String qrCodeUrl = generateQRCodeImage(qrCodeData);
+        // qr_code_url 改為固定格式
+        String qrCodeUrl = "/qrcodes/tickets/" + "tix_" + ticketId + ".png";
 
         MovieTicketQRCode qrCode = new MovieTicketQRCode();
         qrCode.setTicketId(ticketId);
         qrCode.setQrCodeData(qrCodeData);
-        qrCode.setQrCodeUrl(qrCodeUrl);
+        qrCode.setQrCodeUrl(qrCodeUrl);  // 這裡只存路徑
         qrCode.setValidUntil(validUntil);
         qrCode.setIsUsed(false);
 
         return movieTicketQRCodeRepository.save(qrCode);
     }
+
+
 
     // 生成優惠券QR碼
     @Transactional
@@ -122,7 +125,7 @@ public class QRCodeService {
     }
 
     // 生成QR碼圖片
-    private String generateQRCodeImage(String qrCodeData) {
+    public String generateQRCodeImage(String qrCodeData) {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(qrCodeData, BarcodeFormat.QR_CODE, 200, 200);
@@ -198,10 +201,13 @@ public class QRCodeService {
         return discountCouponQRCodeRepository.save(qrCode);
     }
 
-
     @Transactional
     public MovieTicketQRCode generateMovieTicketVerificationQRCode(Long ticketId, MovieTicket ticket) {
         try {
+            // 加入 debug 日誌
+            System.out.println("開始生成QR碼，ticketId: " + ticketId);
+            System.out.println("票券資訊: " + ticket);
+
             // 組合電影票資訊為JSON字串
             Map<String, String> ticketInfo = new HashMap<>();
             ticketInfo.put("ticketId", ticketId.toString());
@@ -213,12 +219,14 @@ public class QRCodeService {
             String jsonData;
             try {
                 jsonData = new ObjectMapper().writeValueAsString(ticketInfo);
+                System.out.println("JSON資料: " + jsonData);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("轉換票券資訊失敗", e);
             }
 
             // 生成QR Code
             String qrCodeUrl = generateQRCodeImage(jsonData);
+            System.out.println("QR Code URL生成成功");
 
             // 建立QR Code記錄
             MovieTicketQRCode qrCode = new MovieTicketQRCode();
@@ -230,10 +238,10 @@ public class QRCodeService {
 
             return movieTicketQRCodeRepository.save(qrCode);
         } catch (Exception e) {
+            e.printStackTrace(); // 印出詳細錯誤堆疊
             throw new RuntimeException("生成QR碼失敗", e);
         }
     }
-
     @Transactional(readOnly = true)
     public Map<String, Object> getTicketVerificationInfo(String qrCodeData) {
         try {
