@@ -212,19 +212,27 @@ public class UserService {
     }
 
 
+    @Transactional
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("找不到用戶"));
 
+        // 檢查 email 是否已被其他用戶使用
+        if (!user.getEmail().equals(request.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
+            throw new CustomException("電子郵件已被使用", HttpStatus.BAD_REQUEST);
+        }
+
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setRole(request.getRole());
+        user.setRole("ROLE_" + request.getRole());  // 加上角色前綴
         user.setActive(request.getActive());
         user.setUpdatedAt(LocalDateTime.now());
 
         user = userRepository.save(user);
         return convertToUserResponse(user);
     }
+
 
     private UserResponse convertToUserResponse(User user) {
         return UserResponse.builder()

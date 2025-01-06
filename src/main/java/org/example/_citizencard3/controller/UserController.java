@@ -5,6 +5,7 @@ import org.example._citizencard3.dto.request.CreateUserRequest;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
 import org.example._citizencard3.dto.request.UpdateUserRequest;
 import org.example._citizencard3.dto.response.UserResponse;
+import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -104,7 +105,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}")  // 修改為正確的端點映射
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
