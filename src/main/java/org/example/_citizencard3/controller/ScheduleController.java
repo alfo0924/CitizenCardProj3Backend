@@ -25,7 +25,7 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping("/schedules")
-//@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"${app.cors.allowed-origins}"})
 public class ScheduleController {
 
     @Autowired

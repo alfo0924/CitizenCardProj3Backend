@@ -115,6 +115,19 @@ public interface MovieTicketRepository extends JpaRepository<MovieTicket, Long> 
             @Param("now") LocalDateTime now
     );
 
+    // 查詢用戶的所有票券
+    @Query("SELECT mt FROM MovieTicket mt WHERE mt.userId = :userId")
+    List<MovieTicket> findByUserId(@Param("userId") Long userId);
+
+    //查詢用戶在該時段有無訂票
+    @Query("SELECT COUNT(t) > 0 FROM MovieTicket t " +
+        "WHERE t.userId = :userId AND t.schedule.id = :scheduleId " +
+        "AND t.status = 'VALID'")
+    boolean hasUserBookedSchedule(
+        @Param("userId") Long userId,
+        @Param("scheduleId") Long scheduleId
+    );
+
     // 查詢即將過期的票券
     @Query("SELECT t FROM MovieTicket t WHERE t.status = 'VALID' AND " +
             "t.schedule.showTime BETWEEN :start AND :end " +
@@ -191,4 +204,17 @@ public interface MovieTicketRepository extends JpaRepository<MovieTicket, Long> 
     @Query("SELECT t.seatNumber FROM MovieTicket t " +
             "WHERE t.schedule.id = :scheduleId AND t.status = 'VALID'")
     List<String> findOccupiedSeats(@Param("scheduleId") Long scheduleId);
+
+    // 查詢場次的已預訂座位
+    @Query("SELECT t.seatNumber FROM MovieTicket t " +
+        "WHERE t.schedule.id = :scheduleId AND t.status = 'VALID'")
+    List<String> findBookedSeatsByScheduleId(@Param("scheduleId") Long scheduleId);
+
+    // 查詢場次的已預訂座位數量
+    @Query("SELECT COUNT(t) > 0 FROM MovieTicket t " +
+        "WHERE t.schedule.id = :scheduleId " +
+        "AND t.seatNumber = :seatNumber " +
+        "AND t.status = 'VALID'")
+    boolean isSeatBooked(@Param("scheduleId") Long scheduleId,
+        @Param("seatNumber") String seatNumber);
 }
