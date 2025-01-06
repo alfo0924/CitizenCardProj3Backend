@@ -92,9 +92,9 @@ public class UserController {
             @RequestParam(required = false) String role,
             @RequestParam(required = false) Boolean active
     ) {
-        Page<UserResponse> users = userService.listUsers(page, size, search, role, active);
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userService.listUsers(page, size, search, role, active));
     }
+
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
