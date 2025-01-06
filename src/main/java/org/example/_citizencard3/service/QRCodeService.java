@@ -1,5 +1,11 @@
 package org.example._citizencard3.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+import org.example._citizencard3.model.MovieTicket;
 import org.example._citizencard3.model.MovieTicketQRCode;
 import org.example._citizencard3.model.DiscountCouponQRCode;
 import org.example._citizencard3.repository.MovieTicketQRCodeRepository;
@@ -190,6 +196,51 @@ public class QRCodeService {
         qrCode.setUsedAt(null);
 
         return discountCouponQRCodeRepository.save(qrCode);
+    }
+
+
+    @Transactional
+    public MovieTicketQRCode generateMovieTicketVerificationQRCode(Long ticketId, MovieTicket ticket) {
+        try {
+            // 組合電影票資訊為JSON字串
+            Map<String, String> ticketInfo = new HashMap<>();
+            ticketInfo.put("ticketId", ticketId.toString());
+            ticketInfo.put("hall", ticket.getSchedule().getHall());
+            ticketInfo.put("showTime", ticket.getSchedule().getShowTime().toString());
+            ticketInfo.put("seatNumber", ticket.getSeatNumber());
+
+            // 轉換為JSON字串
+            String jsonData;
+            try {
+                jsonData = new ObjectMapper().writeValueAsString(ticketInfo);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("轉換票券資訊失敗", e);
+            }
+
+            // 生成QR Code
+            String qrCodeUrl = generateQRCodeImage(jsonData);
+
+            // 建立QR Code記錄
+            MovieTicketQRCode qrCode = new MovieTicketQRCode();
+            qrCode.setTicketId(ticketId);
+            qrCode.setQrCodeData(jsonData);
+            qrCode.setQrCodeUrl(qrCodeUrl);
+            qrCode.setValidUntil(ticket.getSchedule().getShowTime());
+            qrCode.setIsUsed(false);
+
+            return movieTicketQRCodeRepository.save(qrCode);
+        } catch (Exception e) {
+            throw new RuntimeException("生成QR碼失敗", e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTicketVerificationInfo(String qrCodeData) {
+        try {
+            return new ObjectMapper().readValue(qrCodeData, new TypeReference<Map<String, Object>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("QR碼資料解析失敗", e);
+        }
     }
 
 }

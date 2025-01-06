@@ -1,5 +1,6 @@
 package org.example._citizencard3.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -7,6 +8,9 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -23,6 +27,8 @@ public class QRCodeGenerator {
 
     private static final int QR_CODE_SIZE = 200;
     private static final String IMAGE_FORMAT = "PNG";
+    @Value("${app.ticket.encryption.key}")
+    private String encryptionKey;
 
     public String generateQRCodeData(String prefix, Long id, LocalDateTime validUntil) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
@@ -103,5 +109,44 @@ public class QRCodeGenerator {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // 新增電影票加密資訊生成方法
+    public String generateMovieTicketQRCodeData(Long ticketId, String movieName,
+        String showTime, String hallName, String seatNumber, LocalDateTime validUntil) {
+        try {
+            // 組織票券資訊
+            Map<String, String> ticketInfo = new HashMap<>();
+            ticketInfo.put("ticketId", ticketId.toString());
+            ticketInfo.put("movieName", movieName);
+            ticketInfo.put("showTime", showTime);
+            ticketInfo.put("hallName", hallName);
+            ticketInfo.put("seatNumber", seatNumber);
+            ticketInfo.put("validUntil", validUntil.toString());
+
+            // 轉換為JSON並加密
+            String jsonData = new ObjectMapper().writeValueAsString(ticketInfo);
+            return encryptTicketData(jsonData);
+        } catch (Exception e) {
+            throw new RuntimeException("電影票QR碼生成失敗", e);
+        }
+    }
+
+    // 加密方法
+    private String encryptTicketData(String data) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(encryptionKey.getBytes(), "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedData = cipher.doFinal(data.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedData);
+    }
+
+    // 解密方法
+    public String decryptTicketData(String encryptedData) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(encryptionKey.getBytes(), "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decryptedData = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+        return new String(decryptedData);
     }
 }
