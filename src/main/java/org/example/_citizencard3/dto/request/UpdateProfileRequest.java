@@ -1,12 +1,10 @@
 package org.example._citizencard3.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
@@ -17,6 +15,12 @@ public class UpdateProfileRequest {
     @NotBlank(message = "姓名不能為空")
     @Size(min = 2, max = 50, message = "姓名長度必須在2-50個字元之間")
     private String name;
+
+    @Getter
+    @Setter
+    @Email(message = "請輸入有效的電子郵件")
+    @Size(max = 100, message = "電子郵件長度不能超過100個字元")
+    private String email;
 
     @Pattern(regexp = "^09\\d{8}$", message = "請輸入有效的手機號碼")
     @Size(max = 20, message = "手機號碼長度不能超過20個字元")
@@ -33,4 +37,13 @@ public class UpdateProfileRequest {
 
     @Size(max = 200, message = "頭像URL長度不能超過200個字元")
     private String avatar;
+
+    @Getter
+    @Setter
+    private String role;
+
+    @Getter
+    @Setter
+    private boolean active;
+
 }

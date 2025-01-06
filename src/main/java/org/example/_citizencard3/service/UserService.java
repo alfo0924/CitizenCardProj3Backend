@@ -207,27 +207,18 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse updateUser(Long id, @Valid UpdateProfileRequest request) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new CustomException("找不到指定用戶", HttpStatus.NOT_FOUND));
-
-        // 更新用戶資料
+    public UserResponse updateUser(Long id, UpdateProfileRequest request) {
+        User user = findUserById(id);
         user.setName(request.getName());
-        user.setPhone(request.getPhone());
-        user.setBirthday(request.getBirthday());
-        user.setGender(request.getGender());
-        user.setAddress(request.getAddress());
-        user.setAvatar(request.getAvatar());
-
-        // 更新時間戳和版本
+        user.setEmail(request.getEmail());
+        user.setRole(request.getRole());
+        user.setActive(request.isActive());
         user.setUpdatedAt(LocalDateTime.now());
         user.setVersion(user.getVersion() + 1);
 
-        // 儲存更新後的用戶資料
         user = userRepository.save(user);
-
-        // 轉換並返回更新後的用戶資料
         return convertToResponse(user);
     }
+
 
 }
