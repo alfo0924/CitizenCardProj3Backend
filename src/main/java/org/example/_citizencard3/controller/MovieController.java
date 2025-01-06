@@ -96,10 +96,11 @@ public class MovieController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieResponse> updateMovie(
             @PathVariable Long id,
-            @Valid @RequestBody MovieRequest request
+            @ModelAttribute MovieRequest request  // 使用@ModelAttribute接收multipart/form-data
     ) {
         return ResponseEntity.ok(movieService.updateMovie(id, request));
     }
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
