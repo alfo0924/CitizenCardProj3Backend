@@ -198,8 +198,15 @@ public class MovieService {
             movie.setRating(request.getRating());
             movie.setPosterUrl(request.getPosterUrl());
             movie.setTrailerUrl(request.getTrailerUrl());
-            movie.setReleaseDate(request.getReleaseDate());
-            movie.setEndDate(request.getEndDate());
+
+            // 只在有新值時更新日期
+            if (request.getReleaseDate() != null) {
+                movie.setReleaseDate(request.getReleaseDate());
+            }
+            if (request.getEndDate() != null) {
+                movie.setEndDate(request.getEndDate());
+            }
+
             movie.setIsShowing(request.getIsShowing());
             movie.setPrice(request.getPrice());
             movie.setUpdatedAt(LocalDateTime.now());
@@ -212,6 +219,7 @@ public class MovieService {
             throw new CustomException("更新電影失敗", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     @Transactional
     public void deleteMovie(Long id) {
@@ -290,27 +298,24 @@ public class MovieService {
     }
 
     private void validateMovieRequest(MovieRequest request) {
-        if (request.getReleaseDate().isAfter(request.getEndDate())) {
-            throw new CustomException(
-                    "上映日期不能晚於下檔日期",
-                    HttpStatus.BAD_REQUEST
-            );
+        // 修改驗證邏輯，允許票價為0
+        if (request.getReleaseDate() == null || request.getEndDate() == null) {
+            throw new CustomException("上映日期和下檔日期不能為空", HttpStatus.BAD_REQUEST);
         }
 
-        if (request.getPrice() <= 0) {
-            throw new CustomException(
-                    "票價必須大於0",
-                    HttpStatus.BAD_REQUEST
-            );
+        if (request.getReleaseDate().isAfter(request.getEndDate())) {
+            throw new CustomException("上映日期不能晚於下檔日期", HttpStatus.BAD_REQUEST);
+        }
+
+        if (request.getPrice() < 0) {
+            throw new CustomException("票價不能小於0", HttpStatus.BAD_REQUEST);
         }
 
         if (request.getDuration() <= 0) {
-            throw new CustomException(
-                    "片長必須大於0",
-                    HttpStatus.BAD_REQUEST
-            );
+            throw new CustomException("片長必須大於0", HttpStatus.BAD_REQUEST);
         }
     }
+
 
     private MovieResponse convertToResponse(Movie movie) {
         return MovieResponse.builder()

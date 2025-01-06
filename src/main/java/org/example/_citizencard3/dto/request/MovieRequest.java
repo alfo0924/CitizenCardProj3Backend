@@ -41,6 +41,6 @@ public class MovieRequest {
     @NotNull(message = "是否上映不能為空")
     private Boolean isShowing;
 
-    @NotNull(message = "票價不能為空")
+//    @NotNull(message = "票價不能為空")
     private Integer price;
 }
