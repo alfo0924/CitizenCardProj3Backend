@@ -3,6 +3,7 @@ package org.example._citizencard3.controller;
 import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.dto.request.CreateUserRequest;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
+import org.example._citizencard3.dto.request.UpdateUserRequest;
 import org.example._citizencard3.dto.response.UserResponse;
 import org.example._citizencard3.service.UserService;
 import org.springframework.data.domain.Page;
@@ -103,12 +104,11 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateProfileRequest request
+            @Valid @RequestBody UpdateUserRequest request
     ) {
         UserResponse response = userService.updateUser(id, request);
         return ResponseEntity.ok(response);

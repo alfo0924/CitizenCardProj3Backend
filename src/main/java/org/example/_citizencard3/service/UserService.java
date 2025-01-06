@@ -5,10 +5,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example._citizencard3.dto.request.CreateUserRequest;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
+import org.example._citizencard3.dto.request.UpdateUserRequest;
 import org.example._citizencard3.dto.response.UserResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.User;
 import org.example._citizencard3.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.example._citizencard3.dto.request.UpdateUserRequest;
+import org.example._citizencard3.exception.ResourceNotFoundException;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -206,19 +211,40 @@ public class UserService {
         return convertToResponse(user);
     }
 
-    @Transactional
-    public UserResponse updateUser(Long id, UpdateProfileRequest request) {
-        User user = findUserById(id);
+
+    public UserResponse updateUser(Long id, UpdateUserRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("找不到用戶"));
+
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setRole(request.getRole());
-        user.setActive(request.isActive());
+        user.setActive(request.getActive());
         user.setUpdatedAt(LocalDateTime.now());
-        user.setVersion(user.getVersion() + 1);
 
         user = userRepository.save(user);
-        return convertToResponse(user);
+        return convertToUserResponse(user);
     }
 
+    private UserResponse convertToUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .birthday(user.getBirthday())
+                .gender(user.getGender())
+                .role(user.getRole())
+                .address(user.getAddress())
+                .avatar(user.getAvatar())
+                .active(user.isActive())
+                .emailVerified(user.isEmailVerified())
+                .lastLoginTime(user.getLastLoginTime())
+                .lastLoginIp(user.getLastLoginIp())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .version(user.getVersion())
+                .build();
+    }
 
 }
