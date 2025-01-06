@@ -217,4 +217,19 @@ public interface MovieTicketRepository extends JpaRepository<MovieTicket, Long> 
         "AND t.status = 'VALID'")
     boolean isSeatBooked(@Param("scheduleId") Long scheduleId,
         @Param("seatNumber") String seatNumber);
+
+    @Query("SELECT t FROM MovieTicket t " +
+        "LEFT JOIN FETCH t.user " +
+        "LEFT JOIN FETCH t.movie " +
+        "LEFT JOIN FETCH t.schedule " +
+        "WHERE t.userId = :userId")
+    List<MovieTicket> findByUserIdWithDetails(@Param("userId") Long userId);
+
+    //找到電影票
+    @Query("SELECT t FROM MovieTicket t " +
+        "LEFT JOIN FETCH t.user " +
+        "LEFT JOIN FETCH t.movie " +
+        "LEFT JOIN FETCH t.schedule " +
+        "WHERE t.id = :ticketId")
+    Optional<MovieTicket> findByIdWithDetails(@Param("ticketId") Long ticketId);
 }

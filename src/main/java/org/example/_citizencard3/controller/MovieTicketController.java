@@ -51,6 +51,7 @@ public class MovieTicketController {
   }
 
   @GetMapping("/user")
+  @ResponseBody
   public ResponseEntity<?> getUserTickets() {
     try {
       Long userId = getCurrentUserId();
@@ -85,5 +86,20 @@ public class MovieTicketController {
     org.example._citizencard3.model.User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new RuntimeException("找不到使用者"));
     return user.getId();
+  }
+
+  @PostMapping("/cancel/{ticketId}")
+  public ResponseEntity<?> cancelTicket(@PathVariable Long ticketId) {
+    try {
+      Long userId = getCurrentUserId();
+      MovieTicketResponse ticket = movieTicketService.cancelTicket(userId, ticketId);
+      return ResponseEntity.ok(ticket);
+    } catch (Exception e) {
+      Map<String, Object> response = new HashMap<>();
+      response.put("message", "取消訂票失敗: " + e.getMessage());
+      response.put("status", 500);
+      response.put("timestamp", System.currentTimeMillis());
+      return ResponseEntity.status(500).body(response);
+    }
   }
 }
