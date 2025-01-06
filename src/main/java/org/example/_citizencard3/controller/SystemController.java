@@ -115,7 +115,7 @@ public class SystemController {
             Map<String, Object> distributions = new HashMap<>();
             distributions.put("userRoles", systemService.getUserRoleDistribution());
             distributions.put("movieGenres", systemService.getMovieGenreDistribution());
-            distributions.put("storeCategories", systemService.getStoreCategoryDistribution());
+//            distributions.put("storeCategories", systemService.getStoreCategoryDistribution());
             distributions.put("timestamp", LocalDateTime.now());
             distributions.put("success", true);
 

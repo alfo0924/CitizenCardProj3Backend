@@ -53,10 +53,10 @@ public class SystemService {
             CompletableFuture<Long> activeUsersFuture = CompletableFuture.supplyAsync(() ->
                     getCountSafely(() -> userRepository.countByLastLoginTimeAfter(oneMonthAgo), "活躍用戶數"));
 
-            CompletableFuture<Long> totalStoresFuture = CompletableFuture.supplyAsync(() ->
-                    getCountSafely(() -> storeRepository.countByActiveTrue(), "總商店數"));
-            CompletableFuture<Long> newStoresFuture = CompletableFuture.supplyAsync(() ->
-                    getCountSafely(() -> storeRepository.countByActiveTrueAndCreatedAtAfter(oneMonthAgo), "新商店數"));
+//            CompletableFuture<Long> totalStoresFuture = CompletableFuture.supplyAsync(() ->
+//                    getCountSafely(() -> storeRepository.countByActiveTrue(), "總商店數"));
+//            CompletableFuture<Long> newStoresFuture = CompletableFuture.supplyAsync(() ->
+//                    getCountSafely(() -> storeRepository.countByActiveTrueAndCreatedAtAfter(oneMonthAgo), "新商店數"));
 
             CompletableFuture<Long> activeMoviesFuture = CompletableFuture.supplyAsync(() ->
                     getCountSafely(() -> movieRepository.countByIsShowingTrueAndActiveTrue(), "上映電影數"));
@@ -66,7 +66,7 @@ public class SystemService {
             // Wait for all futures to complete
             CompletableFuture.allOf(
                     totalUsersFuture, newUsersFuture, activeUsersFuture,
-                    totalStoresFuture, newStoresFuture,
+//                    totalStoresFuture, newStoresFuture,
                     activeMoviesFuture, newMoviesFuture
             ).join();
 
@@ -76,8 +76,8 @@ public class SystemService {
                     .totalUsers(totalUsersFuture.get())
                     .newUsers(newUsersFuture.get())
                     .activeUsers(activeUsersFuture.get())
-                    .totalStores(totalStoresFuture.get())
-                    .newStores(newStoresFuture.get())
+//                    .totalStores(totalStoresFuture.get())
+//                    .newStores(newStoresFuture.get())
                     .activeMovies(activeMoviesFuture.get())
                     .newMovies(newMoviesFuture.get())
                     .totalBalance(getDoubleSafely(() -> walletRepository.sumBalance(), "總餘額"))
@@ -91,7 +91,7 @@ public class SystemService {
                             discountCouponRepository.countByStatusEqualsAndUpdatedAtAfter("USED", startOfDay), "今日使用優惠券數"))
                     .userRoleDistribution(getUserRoleDistribution())
                     .movieGenreDistribution(getMovieGenreDistribution())
-                    .storeCategoryDistribution(getStoreCategoryDistribution())
+//                    .storeCategoryDistribution(getStoreCategoryDistribution())
                     .timestamp(now)
                     .build();
 
@@ -139,16 +139,16 @@ public class SystemService {
         }
     }
 
-    @Cacheable(value = DISTRIBUTION_CACHE, key = "'storeCategory'", unless = "#result.isEmpty()")
-    public Map<String, Long> getStoreCategoryDistribution() {
-        try {
-            Map<String, Long> distribution = storeRepository.countByCategory();
-            return distribution != null ? distribution : new HashMap<>();
-        } catch (Exception e) {
-            log.error("Failed to get store category distribution", e);
-            return new HashMap<>();
-        }
-    }
+//    @Cacheable(value = DISTRIBUTION_CACHE, key = "'storeCategory'", unless = "#result.isEmpty()")
+//    public Map<String, Long> getStoreCategoryDistribution() {
+//        try {
+//            Map<String, Long> distribution = storeRepository.countByCategory();
+//            return distribution != null ? distribution : new HashMap<>();
+//        } catch (Exception e) {
+//            log.error("Failed to get store category distribution", e);
+//            return new HashMap<>();
+//        }
+//    }
 
     private long getCountSafely(CountSupplier supplier, String metricName) {
         try {

@@ -5,118 +5,63 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "stores")
+@Table(name = "discount_store")
 public class Store {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private String category;
+    @Column(name = "area", nullable = false)
+    private String area;
 
-    @Column(length = 500)
-    private String description;
+    @Column(name = "tag", nullable = false)
+    private String tag;
 
-    @Column(nullable = false)
-    private String address;
+    @Column(name = "content", nullable = false, length = 500)
+    private String content;
 
-    private String phone;
-
-    private String email;
-
+    @Column(name = "website")
     private String website;
 
-    private String openingHours;
+    @Column(name = "category")
+    private String category;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    @Column(name = "short_content")
+    private String shortContent;
 
-    @Column(nullable = false)
-    private boolean active;
+    @Column(name = "time")
+    private String time;
 
-    @Column(name = "discount_info", length = 500)
-    private String discountInfo;
+    @Column(name = "address")
+    private String address;
 
-    private Double latitude;
+    @Column(name = "phone")
+    private String phone;
 
-    private Double longitude;
+    @Column(name = "priority")
+    private int priority;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "popularity")
+    private int popularity;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "is_donation")
+    private Boolean isDonation;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    @Column(name = "iframe_src")
+    private String iframeSrc;
 
-    @Version
-    private Integer version;
+    @Column(name = "img_url")
+    private String imgUrl;
 
-    // 軟刪除標記
-    @Column(name = "is_deleted", nullable = false)
-    private boolean deleted = false;
-
-    // 評分相關
-    private Double rating;
-
-    @Column(name = "rating_count")
-    private Integer ratingCount;
-
-    // 合作狀態
-    @Enumerated(EnumType.STRING)
-    @Column(name = "partnership_status")
-    private PartnershipStatus partnershipStatus;
-
-    public enum PartnershipStatus {
-        ACTIVE,
-        PENDING,
-        SUSPENDED,
-        TERMINATED
-    }
-
-    // 業務方法
-    public void updateRating(Double newRating) {
-        if (this.ratingCount == null) this.ratingCount = 0;
-        if (this.rating == null) this.rating = 0.0;
-
-        this.rating = ((this.rating * this.ratingCount) + newRating) / (this.ratingCount + 1);
-        this.ratingCount++;
-    }
-
-    public void softDelete() {
-        this.deleted = true;
-        this.deletedAt = LocalDateTime.now();
-    }
-
-    public void restore() {
-        this.deleted = false;
-        this.deletedAt = null;
-    }
-
-    public void suspend() {
-        this.active = false;
-        this.partnershipStatus = PartnershipStatus.SUSPENDED;
-    }
-
-    public void activate() {
-        this.active = true;
-        this.partnershipStatus = PartnershipStatus.ACTIVE;
-    }
 }
