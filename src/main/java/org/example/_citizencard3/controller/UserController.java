@@ -1,9 +1,12 @@
 package org.example._citizencard3.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example._citizencard3.dto.request.CreateUserRequest;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
 import org.example._citizencard3.dto.response.UserResponse;
 import org.example._citizencard3.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -37,16 +40,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/list")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponse>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search
-    ) {
-        List<UserResponse> users = userService.getAllUsers(page, size, search);
-        return ResponseEntity.ok(users);
-    }
+
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -87,5 +81,25 @@ public class UserController {
         Map<String, String> response = new HashMap<>();
         response.put("message", e.getMessage());
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserResponse>> listUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Boolean active
+    ) {
+        Page<UserResponse> users = userService.listUsers(page, size, search, role, active);
+        return ResponseEntity.ok(users);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+        UserResponse user = userService.createUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 }

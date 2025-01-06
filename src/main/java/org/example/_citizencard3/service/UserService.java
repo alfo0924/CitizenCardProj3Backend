@@ -1,13 +1,17 @@
 package org.example._citizencard3.service;
 
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.example._citizencard3.dto.request.CreateUserRequest;
 import org.example._citizencard3.dto.request.UpdateProfileRequest;
 import org.example._citizencard3.dto.response.UserResponse;
 import org.example._citizencard3.exception.CustomException;
 import org.example._citizencard3.model.User;
 import org.example._citizencard3.repository.UserRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -165,5 +169,40 @@ public class UserService {
 
     public List<Map<String, Object>> getRecentLogins(int i) {
         return null;
+    }
+    public Page<UserResponse> listUsers(int page, int size, String search, String role, Boolean active) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> users;
+
+        if (search != null && !search.isEmpty()) {
+            users = userRepository.findByNameContainingOrEmailContaining(search, search, pageable);
+        } else if (role != null && active != null) {
+            users = userRepository.findByRoleAndActive(role, active, pageable);
+        } else if (role != null) {
+            users = userRepository.findByRole(role, pageable);
+        } else if (active != null) {
+            users = userRepository.findByActive(active, pageable);
+        } else {
+            users = userRepository.findAll(pageable);
+        }
+
+        return users.map(this::convertToResponse);
+    }
+
+    public UserResponse createUser(@Valid CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new CustomException("電子郵件已被使用", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole())
+                .active(true)
+                .build();
+
+        user = userRepository.save(user);
+        return convertToResponse(user);
     }
 }

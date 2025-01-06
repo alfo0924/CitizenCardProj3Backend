@@ -113,4 +113,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u.role, COUNT(u) FROM User u GROUP BY u.role")
     Map<String, Long> countByRole();
 
+
+    // 根據角色和啟用狀態查詢用戶
+    Page<User> findByRoleAndActive(String role, Boolean active, Pageable pageable);
+
+    // 根據角色查詢用戶
+    Page<User> findByRole(String role, Pageable pageable);
+
+    // 根據啟用狀態查詢用戶
+    Page<User> findByActive(Boolean active, Pageable pageable);
+
+
 }
