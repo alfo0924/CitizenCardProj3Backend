@@ -5,12 +5,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import org.example._citizencard3.model.MovieTicket;
 import org.example._citizencard3.model.MovieTicketQRCode;
 import org.example._citizencard3.model.DiscountCouponQRCode;
 import org.example._citizencard3.repository.MovieTicketQRCodeRepository;
 import org.example._citizencard3.repository.DiscountCouponQRCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,8 @@ import java.util.UUID;
 
 @Service
 public class QRCodeService {
+    @Value("${app.ticket.encryption.key}")
+    private String encryptionKey;
 
     @Autowired
     private MovieTicketQRCodeRepository movieTicketQRCodeRepository;
@@ -119,9 +124,36 @@ public class QRCodeService {
 
     // 生成QR碼數據
     private String generateQRCodeData(String prefix, Long id) {
-        return prefix + "-" + LocalDateTime.now().getYear() + "-" +
+        try {
+            // 先生成原始格式
+            String rawData = prefix + "-" + LocalDateTime.now().getYear() + "-" +
                 String.format("%06d", id) + "-" +
                 UUID.randomUUID().toString().substring(0, 8);
+
+            // 加密數據
+            SecretKeySpec secretKey = new SecretKeySpec(encryptionKey.getBytes(), "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedData = cipher.doFinal(rawData.getBytes());
+
+            // 返回 Base64 編碼的加密數據
+            return Base64.getEncoder().encodeToString(encryptedData);
+        } catch (Exception e) {
+            throw new RuntimeException("加密QR碼數據失敗", e);
+        }
+    }
+
+    // 添加解密方法用於驗證
+    public String decryptQRCodeData(String encryptedData) {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(encryptionKey.getBytes(), "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decryptedData = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+            return new String(decryptedData);
+        } catch (Exception e) {
+            throw new RuntimeException("解密QR碼數據失敗", e);
+        }
     }
 
     // 生成QR碼圖片
